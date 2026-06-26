@@ -1,5 +1,5 @@
 ---
-name: db-review
+name: phurti-db-review
 description: Reviews database changes — schema, migrations, and queries — for safety, indexes, N+1 problems, and data integrity. Use when changing schema, writing migrations, or adding/altering queries.
 tools: Read, Grep, Glob, Bash
 model: sonnet

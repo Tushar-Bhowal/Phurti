@@ -1,5 +1,5 @@
 ---
-name: ai-review
+name: phurti-ai-review
 description: Reviews AI/LLM integration code for prompt-injection safety, output validation, cost/token control, failure handling, and data privacy. Use when adding or changing LLM calls, prompts, agents, or RAG/embedding logic.
 tools: Read, Grep, Glob, Bash
 model: sonnet

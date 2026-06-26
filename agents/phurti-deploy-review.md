@@ -1,5 +1,5 @@
 ---
-name: deploy-review
+name: phurti-deploy-review
 description: Reviews changes for deployment safety — config, secrets, env parity, migration ordering, rollback, and observability. Use before deploying or when changing build, CI/CD, infra, or release config.
 tools: Read, Grep, Glob, Bash
 model: sonnet

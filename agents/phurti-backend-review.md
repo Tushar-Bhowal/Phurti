@@ -1,5 +1,5 @@
 ---
-name: backend-review
+name: phurti-backend-review
 description: Reviews backend/API changes for input validation, authorization, error handling, data contracts, and injection risks. Use after building or changing an endpoint, service, or server-side logic.
 tools: Read, Grep, Glob, Bash
 model: sonnet

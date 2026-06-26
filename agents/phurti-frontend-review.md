@@ -1,5 +1,5 @@
 ---
-name: frontend-review
+name: phurti-frontend-review
 description: Reviews UI/frontend changes for accessibility, responsiveness, state handling, and visual fidelity. Use after building or changing any UI, component, or page, or when a design was provided to match.
 tools: Read, Grep, Glob, Bash
 model: sonnet

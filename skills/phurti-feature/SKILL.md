@@ -1,5 +1,5 @@
 ---
-name: feature
+name: phurti-feature
 description: Implement any feature, change, or bug fix end to end (frontend or backend), done correctly. Explore, plan, implement, verify with evidence, review independently, then commit.
 argument-hint: [what to build or fix]
 disable-model-invocation: true
@@ -7,12 +7,12 @@ disable-model-invocation: true
 
 # Task: $ARGUMENTS
 
-Act as a senior engineer. Deliver the task above correctly, end to end. "Looks done" is not done — prove it works before you stop. Follow this project's CLAUDE.md and existing conventions; they override anything here.
+Act as a senior engineer. Deliver the task above correctly, end to end. "Looks done" is not done — prove it works before you stop. Follow this project's memory file (AGENTS.md / CLAUDE.md) and existing conventions; they override anything here.
 
-Prefer the simplest solution that fully solves the problem. If a small, direct fix resolves the issue, do that — don't build a bigger or more general solution than the task needs. No new abstractions, layers, config options, or defensive code for cases that can't happen. Add complexity only when the task genuinely requires it, and if you think a larger change is warranted, propose it to me first instead of just building it.
+Build only what the task needs — follow the ladder: skip what needn't exist, then reach for the standard library, then a native platform feature, then an already-installed dependency, then one line, and only then the minimum that fully works. No new abstractions, layers, config options, or defensive code for cases that can't happen. Never cut input validation, error handling, security, or accessibility to shrink code. If a larger change is genuinely warranted, propose it to me first instead of just building it.
 
 ## 0. Capture and confirm the task
-- If NO task was given above (I ran `/feature` with nothing after it): ask me what I want to work on — a feature, a change, a bug, anything — in plain words. Take my freeform answer (typos and all), restate it as a clear, well-organized task, and ask "Is this what you want me to build?" Proceed only after I confirm.
+- If NO task was given above (I ran `/phurti-feature` with nothing after it): ask me what I want to work on — a feature, a change, a bug, anything — in plain words. Take my freeform answer (typos and all), restate it as a clear, well-organized task, and ask "Is this what you want me to build?" Proceed only after I confirm.
 - If a task WAS given: restate it back in one or two clear sentences, reading through any typos for intent. If it's non-trivial or at all ambiguous, confirm that restatement is right before proceeding; if it's small and unambiguous, proceed directly.
 - Never silently reinterpret a vague request — reflect it back and confirm. Reflect-then-confirm, never reword-and-run.
 - At the same time, give a one-line complexity read and a recommended model: Haiku for trivial edits, Sonnet for normal work, Opus for complex/architectural/cross-system tasks. If it differs from the current model, tell me to switch with `/model` before you start. You can't change the model yourself — just recommend, and proceed on whatever model I'm using.
@@ -56,12 +56,12 @@ Prefer the simplest solution that fully solves the problem. If a small, direct f
 
 ## 6. Independent review
 - Don't grade your own work alone. Run the bundled /code-review skill, or use a subagent to review the diff in a fresh context against the plan and requirements.
-- If the change is squarely in one domain, delegate to the matching review agent when available — frontend-review, backend-review, db-review, test-review, deploy-review, or ai-review — otherwise use a general review subagent. Don't run all of them on every task; pick the one(s) the change actually touches.
+- If the change is squarely in one domain, delegate to the matching review agent when available — phurti-frontend-review, phurti-backend-review, phurti-db-review, phurti-test-review, phurti-deploy-review, or phurti-ai-review — otherwise use a general review subagent. Don't run all of them on every task; pick the one(s) the change actually touches.
 - The reviewer should report only gaps that affect correctness or the stated requirements — fix those, and ignore style nitpicks and over-engineering.
 
 ## 7. Update project memory (only when something durable changed)
-- If this change altered the architecture, a data contract, a core workflow, or a project-wide convention, update the matching line in CLAUDE.md — EDIT the existing entry, don't append a changelog. Keep it lean and remove anything now stale. If nothing durable changed, leave CLAUDE.md untouched.
-- Do NOT record routine task history in CLAUDE.md. Per-session "what we did" belongs in Claude Code's built-in auto memory, not the rules file.
+- If this change altered the architecture, a data contract, a core workflow, or a project-wide convention, update the matching line in the project memory file (AGENTS.md / CLAUDE.md) — EDIT the existing entry, don't append a changelog. Keep it lean and remove anything now stale. If nothing durable changed, leave it untouched.
+- Do NOT record routine task history there. Per-session "what we did" belongs in Claude Code's built-in auto memory, not the rules file.
 
 ## 8. Stop and report — commit only when I ask
 - When everything passes, STOP. Summarize what you did and show the evidence. Do NOT commit yet.

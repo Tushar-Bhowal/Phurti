@@ -1,5 +1,5 @@
 ---
-name: test-review
+name: phurti-test-review
 description: Reviews tests for real coverage and quality — edge cases, meaningful assertions, no weak or over-mocked tests. Use after writing or changing tests, or to judge whether a change is adequately tested.
 tools: Read, Grep, Glob, Bash
 model: sonnet

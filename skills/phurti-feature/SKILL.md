@@ -26,6 +26,7 @@ Build only what the task needs — follow the ladder: skip what needn't exist, t
 
 ## 2. Plan (skip only if the diff fits in one sentence)
 - If this touches more than one file, the approach is uncertain, or I don't know the code: write a short plan first — the files that change, the data/flow, and the edge cases. Show me the plan and WAIT for my approval before implementing. Do this even in auto / auto-accept mode — present the plan and wait, regardless of the permission mode.
+- End the plan with an explicit **Assumptions / Open questions** line: everything you're taking for granted (a value, an API shape, an intended behavior, which of two options I meant) and anything you're still unsure about. Surface assumptions here as a visible checklist I can correct — this is the cheapest point to catch a wrong guess, before any code is written. If an open question would change the approach, ask it now with AskUserQuestion instead of assuming an answer.
 - For a multi-step task, or one likely to span a `/clear` or several sittings: after I approve, also save the plan to `.claude/plans/<short-task-name>.md` and check items off as you finish them, so progress survives a context reset. For a small, single-sitting change, an inline plan is enough — do NOT create a file. (These are scratch files; make sure `.claude/plans/` is in `.gitignore`.)
 - For a trivial, clearly-scoped change (typo, log line, rename), proceed directly.
 

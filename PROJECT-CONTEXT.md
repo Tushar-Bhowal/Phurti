@@ -80,16 +80,19 @@ phurti/
 
 ### What each command does
 - **`/phurti-feature`** — build/fix anything end to end. Intake (brain-dump or `<task>`, restate +
-  confirm), model recommendation, plan (waits for approval even in auto mode; plan file for big
+  confirm), model recommendation, plan (waits for approval even in auto mode; ends with an explicit
+  **Assumptions / Open questions** line so wrong guesses get caught before any code; plan file for big
   tasks), implement (clean comments, the ladder), verify with evidence, route to a domain review
   agent, update project memory if something durable changed, commit **only when asked** (no AI
   attribution), remind to `/clear`.
 - **`/phurti-fix`** — bug-shaped: reproduce with a failing test → find the real root cause (read the
   full code path, check what recently changed, hypothesize and falsify) → smallest correct diff →
   regression test → verify. Points to `/phurti-feature` for larger work.
-- **`/phurti-audit`** — read-only review of the diff/path/repo. Routes to domain agents, verifies
-  each finding (`file:line`, confirmed against real behavior), explicit "do NOT flag" list, one
-  prioritized report (Critical/Important/Minor). No edits, no commits.
+- **`/phurti-audit`** — read-only review of the diff/path/repo. Runs the deterministic checks first
+  (typecheck/lint/build/tests — exact, non-hallucinated signal), routes to domain agents, verifies
+  each finding (`file:line`, confirmed against real behavior), explicit "do NOT flag" list, then a
+  recall-oriented completeness pass ("what did I miss?", scaled to stakes) before one prioritized
+  report (Critical/Important/Minor). No edits, no commits.
 - **`/phurti-memory`** — generate/audit/prune a lean project memory file (`AGENTS.md`, or `CLAUDE.md`
   on Claude Code). Leaves good lines alone; proposes only gaps and trims.
 

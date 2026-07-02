@@ -1,7 +1,7 @@
 ---
 name: phurti-fix
 description: Diagnose and fix a bug at its root cause — reproduce it, trace the real cause, make the smallest correct change, prove it with a regression test. Use for a genuine bug, error, crash, or regression; use /phurti-feature for new functionality or larger changes.
-argument-hint: [the bug — symptom, error message, or how to reproduce it]
+argument-hint: '[the bug — symptom, error message, or how to reproduce it]'
 disable-model-invocation: true
 ---
 

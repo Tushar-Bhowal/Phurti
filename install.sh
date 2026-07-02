@@ -33,8 +33,9 @@ PYEOF
 }
 
 # ---- Claude Code (full kit) ----
-mkdir -p "$DST/skills/phurti-feature" "$DST/skills/phurti-fix" "$DST/skills/phurti-audit" "$DST/skills/phurti-memory" "$DST/hooks" "$DST/agents"
+mkdir -p "$DST/skills/phurti-feature" "$DST/skills/phurti-architect" "$DST/skills/phurti-fix" "$DST/skills/phurti-audit" "$DST/skills/phurti-memory" "$DST/hooks" "$DST/agents"
 cp "$SRC/skills/phurti-feature/SKILL.md"       "$DST/skills/phurti-feature/SKILL.md"
+cp "$SRC/skills/phurti-architect/SKILL.md"     "$DST/skills/phurti-architect/SKILL.md"
 cp "$SRC/skills/phurti-fix/SKILL.md"           "$DST/skills/phurti-fix/SKILL.md"
 cp "$SRC/skills/phurti-audit/SKILL.md"         "$DST/skills/phurti-audit/SKILL.md"
 cp "$SRC/skills/phurti-memory/SKILL.md"  "$DST/skills/phurti-memory/SKILL.md"
@@ -81,7 +82,8 @@ cat << 'NOTE'
 
 Done.
 
-Claude Code  - full kit: /phurti-feature  /phurti-fix  /phurti-audit  /phurti-memory, 6 review agents,
+Claude Code  - full kit: /phurti-architect  /phurti-feature  /phurti-fix  /phurti-audit  /phurti-memory,
+               6 review agents,
                3 hooks, and the rules in ~/.claude/CLAUDE.md.
 Codex CLI    - rules installed at ~/.codex/AGENTS.md (Codex also reads a project AGENTS.md).
                Skills/commands work where Codex supports the Agent Skills spec.

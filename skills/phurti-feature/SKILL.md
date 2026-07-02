@@ -1,7 +1,7 @@
 ---
 name: phurti-feature
 description: Implement any feature, change, or bug fix end to end (frontend or backend), done correctly. Explore, plan, implement, verify with evidence, review independently, then commit.
-argument-hint: [what to build or fix]
+argument-hint: '[what to build or fix]'
 disable-model-invocation: true
 ---
 
@@ -12,7 +12,7 @@ Act as a senior engineer. Deliver the task above correctly, end to end. "Looks d
 Build only what the task needs — follow the ladder: skip what needn't exist, then reach for the standard library, then a native platform feature, then an already-installed dependency, then one line, and only then the minimum that fully works. No new abstractions, layers, config options, or defensive code for cases that can't happen. Never cut input validation, error handling, security, or accessibility to shrink code. If a larger change is genuinely warranted, propose it to me first instead of just building it.
 
 ## 0. Capture and confirm the task
-- If the task above points at an audit findings file (`.claude/plans/audit-findings-*.md`) or says to build the audit findings: read that file and treat the items tagged `→ /phurti-feature` as the work-list. The file already carries the `file:line` and intent — don't make me restate it. Confirm scope and the build order with me first (these are usually new modules with dependencies between them), then go through the phases below for each, ticking items off (`- [x]`) as they land. Leave items tagged `→ /phurti-fix` for that skill.
+- If the task above points at a Phurti plan file (`.claude/plans/audit-findings-*.md` or `.claude/plans/architecture-*.md`) or says to build the audit findings / the architecture: read that file and treat the items tagged `→ /phurti-feature` as the work-list, in order. The file already carries the `file:line`, the design, and the intent — don't make me restate it. Confirm scope and the build order with me first (these are usually dependent phases/modules), then go through the phases below for each, ticking items off (`- [x]`) as they land. Leave items tagged `→ /phurti-fix` for that skill.
 - If NO task was given above (I ran `/phurti-feature` with nothing after it): ask me what I want to work on — a feature, a change, a bug, anything — in plain words. Take my freeform answer (typos and all), restate it as a clear, well-organized task, and ask "Is this what you want me to build?" Proceed only after I confirm.
 - If a task WAS given: restate it back in one or two clear sentences, reading through any typos for intent. If it's non-trivial or at all ambiguous, confirm that restatement is right before proceeding; if it's small and unambiguous, proceed directly.
 - Never silently reinterpret a vague request — reflect it back and confirm. Reflect-then-confirm, never reword-and-run.

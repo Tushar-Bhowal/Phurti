@@ -1,7 +1,7 @@
 ---
 name: phurti-memory
 description: Generate, audit, or refine the best possible project memory file (AGENTS.md, or CLAUDE.md on Claude Code) for THIS repo — lean, high-signal, grounded in the actual code. On an existing file it leaves good content untouched and proposes only genuine gaps and trims.
-argument-hint: [optional note, e.g. "monorepo" or "just refine existing"]
+argument-hint: '[optional note, e.g. "monorepo" or "just refine existing"]'
 disable-model-invocation: true
 allowed-tools: Read, Grep, Glob, Bash
 ---

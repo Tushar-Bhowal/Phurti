@@ -1,7 +1,7 @@
 ---
 name: phurti-audit
 description: Read-only review of the current diff, a path, or the whole repo. Surfaces bugs, security, and correctness issues as one prioritized, evidence-backed report. Makes no edits and no commits. Use when you want findings, not changes.
-argument-hint: [scope — a path, "diff", or "repo"; defaults to the current uncommitted diff]
+argument-hint: '[scope — a path, "diff", or "repo"; defaults to the current uncommitted diff]'
 disable-model-invocation: true
 allowed-tools: Read, Grep, Glob, Bash, Write
 ---

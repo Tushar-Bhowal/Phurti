@@ -41,6 +41,7 @@ Claude Code is the first-class, fully-enforced path. On the instruction-only age
 
 | Piece | What it does |
 | --- | --- |
+| `/phurti-architect` | Design a whole app or a feature **before any code** (Opus-work). Draws out requirements/constraints, maps the existing code, weighs 2–3 approaches, picks one with the trade-offs stated, then phases it into a build plan — written to an architecture doc that `/phurti-feature` implements. Skill-shaped orchestrator; writes no code. |
 | `/phurti-feature` | Build/phurti-fix anything end to end. Brain-dump or `/phurti-feature <task>`; it restates + confirms, recommends a model, plans, implements (clean comments, build-only-what's-needed), verifies with evidence, routes to a review agent, and commits **only when you ask** — no AI attribution. |
 | `/phurti-fix` | Bug-shaped: reproduce with a failing test → find the **root cause** (not the symptom) → smallest correct diff → regression test → verify. Points to `/phurti-feature` for larger changes. |
 | `/phurti-audit` | **Read-only** review of the diff, a path, or the repo. Routes to domain agents, verifies each finding (`file:line`), returns one prioritized report. No edits, no commits. |
@@ -80,6 +81,8 @@ Then restart your agent so it reloads skills, agents, and rules.
 ## Use
 
 ```
+/phurti-architect a multi-tenant billing system         # design an app/feature before any code
+/phurti-feature build the architecture in .claude/plans/architecture-billing.md
 /phurti-feature                                    # bare: brain-dump, it restates & confirms
 /phurti-feature add a logout button that clears the session
 /phurti-fix login fails after the session times out
@@ -96,7 +99,7 @@ Attach an image or paste an error log alongside `/phurti-feature` when relevant.
 ~/.claude/                       # Claude Code
 ├── settings.json                # hooks merged in
 ├── CLAUDE.md                    # rules appended (your content preserved)
-├── skills/{phurti-feature,phurti-fix,phurti-audit,phurti-memory}/SKILL.md
+├── skills/{phurti-architect,phurti-feature,phurti-fix,phurti-audit,phurti-memory}/SKILL.md
 ├── agents/phurti-{frontend,backend,db,test,deploy,ai}-review.md
 └── hooks/{block-ai-attribution,protect-tests,session-status}.py
 

@@ -56,6 +56,7 @@ phurti/
 ├── AGENTS.md                       # SINGLE SOURCE OF TRUTH for the always-on ruleset
 ├── skills/
 │   ├── phurti-feature/SKILL.md     # /phurti-feature — main build/fix workflow
+│   ├── phurti-architect/SKILL.md   # /phurti-architect — design an app/feature → architecture doc → feature builds it
 │   ├── phurti-fix/SKILL.md         # /phurti-fix — bug-shaped: reproduce → root cause → regression test
 │   ├── phurti-audit/SKILL.md       # /phurti-audit — read-only review → one prioritized report
 │   └── phurti-memory/SKILL.md      # /phurti-memory — generate/audit a lean project memory file
@@ -79,6 +80,14 @@ phurti/
 ```
 
 ### What each command does
+- **`/phurti-architect`** — design a whole app or a feature before any code (Opus-work). Sets scope +
+  recommends the top model, draws out requirements/constraints (asks, never invents), maps the existing
+  codebase via a subagent for feature-level work, generates 2–3 candidate approaches (a subagent per
+  approach, in parallel), compares trade-offs and picks one, details the design (data/contracts/failure
+  modes/security) and risks, then phases it into a build plan. Writes an architecture doc to
+  `.claude/plans/architecture-<name>.md` (checkbox phases tagged `→ /phurti-feature`) and hands over the
+  one-line paste to build it. Skill-shaped orchestrator (main-thread design + subagents for isolated
+  legwork); writes no application code.
 - **`/phurti-feature`** — build/fix anything end to end. Intake (brain-dump or `<task>`, restate +
   confirm), model recommendation, plan (waits for approval even in auto mode; ends with an explicit
   **Assumptions / Open questions** line so wrong guesses get caught before any code; plan file for big
@@ -151,9 +160,13 @@ auto-write into the memory file.
 
 ## 7. Hard constraints of host agents (don't add impossible features)
 
-- **A skill cannot switch its own live model.** It can *recommend* a model; the user flips it. Some
-  hosts have a plan→implement auto-switch alias; subagents can pin a model. No "sense difficulty and
-  auto-upgrade the running model."
+- **A skill can't reliably pin its own model — recommend instead.** The VS Code Claude extension's
+  SKILL.md schema has no `model` field (supported: name, description, argument-hint, context,
+  disable-model-invocation, user-invocable, …), and the portable Agent-Skills spec ties a model override
+  to `context: fork`, which isolates the run and kills the interactivity. So a skill should *recommend* a
+  tier and let the user flip it with `/model`; it also can't change the session default or auto-upgrade
+  mid-run. Only **subagents** (`agents/*.md`) pin a model reliably (`model: opus`) — at the cost of
+  interactivity and returning only a summary. `/phurti-architect` therefore recommends Opus, not pins it.
 - **A skill cannot run `/clear` or `/compact`** — user-only. It can remind.
 - **A skill cannot flip the session's permission mode.** It enforces *behavior* instead (e.g. "present
   a plan and wait, regardless of mode").
@@ -207,6 +220,7 @@ higher quality floor — not a guaranteed lower bill. Do not cite outside benchm
 - **`/phurti-feature` does NOT audit memory** — that's `/phurti-memory`'s job; keep them separate.
 - **No external project names anywhere** — describe patterns generically; don't borrow others' metrics.
 - **Secret protection uses native permissions, not a custom regex hook** — install adds `.env` `ask`-rules to `settings.json` (the agent must prompt before reading a secret file, even in auto mode), and `AGENTS.md` forbids hardcoding secrets. Commit-time scanning is a documented gitleaks/trufflehog recommendation, not a reinvented scanner (a git-level scanner also covers all agents, not just Claude Code). Defense-in-depth — the real boundary is keeping real keys off the machine the agent reads.
+- **`/phurti-architect` output uses a spec-driven (SDD) format** — Markdown with XML-tagged sections (`<requirements>`/`<decision>`/`<file-map>`/`<design>`/`<risks>`/`<tasks>`), exact paths with the integration seam marked, and atomic checkbox tasks each with a definition of done, plus one worked example. Grounded in evidence: XML tags give Anthropic-measured ~20–40% more consistent output, few-shot examples improve specificity, and the shape aligns with the GitHub Spec Kit standard (Microsoft/Anthropic/Google). It's a shown default, not a rigid mold — adapt sections to the design.
 
 ---
 

@@ -2,7 +2,6 @@
 name: phurti-architect
 description: Design the architecture for a whole app or a single feature before any code is written — requirements, constraints, 2-3 candidate approaches with trade-offs, a chosen design, risks, and a phased build plan. Produces an architecture doc that /phurti-feature implements. Use for a new app, a large or cross-system feature, or any change big enough that the approach matters more than the code.
 argument-hint: '[what to architect — an app, a feature, or a system change]'
-disable-model-invocation: true
 allowed-tools: Read, Grep, Glob, Bash, Write
 ---
 

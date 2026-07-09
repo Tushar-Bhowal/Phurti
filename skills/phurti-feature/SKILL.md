@@ -1,8 +1,7 @@
 ---
 name: phurti-feature
-description: Implement any feature, change, or bug fix end to end (frontend or backend), done correctly. Explore, plan, implement, verify with evidence, review independently, then commit.
+description: Implement a feature, change, or refactor end to end (frontend or backend), done correctly. Explore, plan, implement, verify with evidence, review independently, then commit. Use whenever writing or changing real code. For a reported bug with a symptom to reproduce, use /phurti-fix instead; to design a new app or a large cross-system feature before coding, use /phurti-architect first.
 argument-hint: '[what to build or fix]'
-disable-model-invocation: true
 ---
 
 # Task: $ARGUMENTS

@@ -220,6 +220,15 @@ higher quality floor — not a guaranteed lower bill. Do not cite outside benchm
 - **`/phurti-feature` does NOT audit memory** — that's `/phurti-memory`'s job; keep them separate.
 - **No external project names anywhere** — describe patterns generically; don't borrow others' metrics.
 - **Secret protection uses native permissions, not a custom regex hook** — install adds `.env` `ask`-rules to `settings.json` (the agent must prompt before reading a secret file, even in auto mode), and `AGENTS.md` forbids hardcoding secrets. Commit-time scanning is a documented gitleaks/trufflehog recommendation, not a reinvented scanner (a git-level scanner also covers all agents, not just Claude Code). Defense-in-depth — the real boundary is keeping real keys off the machine the agent reads.
+- **Auto-invocation is split, not blanket** — `/phurti-feature`, `/phurti-fix`, `/phurti-architect`, and
+  `/phurti-audit` are model-invokable (no `disable-model-invocation`), so the workflow applies even when you
+  forget to type the command. Their `description` is the router, so each must carry explicit "use this / use
+  that instead" guidance — notably `/phurti-audit`'s tells it *not* to fire inside a build, since
+  `/phurti-feature` already reviews at step 6 (otherwise you pay for a redundant double-review). Audit is
+  safe to auto-fire because it makes no code edits and only spawns the review agents its scope actually
+  touches. Only `/phurti-memory` keeps `disable-model-invocation: true` — it rewrites the project memory
+  file, a side effect you should trigger deliberately. Model-invocation is reliable, not guaranteed; all
+  five remain typeable as slash commands.
 - **`/phurti-architect` output uses a spec-driven (SDD) format** — Markdown with XML-tagged sections (`<requirements>`/`<decision>`/`<file-map>`/`<design>`/`<risks>`/`<tasks>`), exact paths with the integration seam marked, and atomic checkbox tasks each with a definition of done, plus one worked example. Grounded in evidence: XML tags give Anthropic-measured ~20–40% more consistent output, few-shot examples improve specificity, and the shape aligns with the GitHub Spec Kit standard (Microsoft/Anthropic/Google). It's a shown default, not a rigid mold — adapt sections to the design.
 
 ---

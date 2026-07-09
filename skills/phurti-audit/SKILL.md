@@ -1,14 +1,13 @@
 ---
 name: phurti-audit
-description: Read-only review of the current diff, a path, or the whole repo. Surfaces bugs, security, and correctness issues as one prioritized, evidence-backed report. Makes no edits and no commits. Use when you want findings, not changes.
+description: Read-only review of the current diff, a path, or the whole repo. Surfaces bugs, security, and correctness issues as one prioritized, evidence-backed report. Makes no code edits and no commits. Use when the goal is findings rather than changes — reviewing a diff before shipping, or checking an area for problems. Do NOT invoke it as part of building something; /phurti-feature already runs its own independent review at the end.
 argument-hint: '[scope — a path, "diff", or "repo"; defaults to the current uncommitted diff]'
-disable-model-invocation: true
 allowed-tools: Read, Grep, Glob, Bash, Write
 ---
 
 # Audit: $ARGUMENTS
 
-Review the scope below and return one honest, prioritized report. This is **read-only on the codebase**: do NOT edit a code file, stage, or commit anything. The one and only thing you may write is the findings file under `.claude/plans/` (step 7) — nothing else. Bias hard for signal — a short report of real issues beats a long list of noise. Judge against this project's CLAUDE.md and conventions.
+Review the scope below and return one honest, prioritized report. This is **read-only on the codebase**: do NOT edit a code file, stage, or commit anything. The one and only thing you may write is the findings file under `.claude/plans/` (step 8) — nothing else. Bias hard for signal — a short report of real issues beats a long list of noise. Judge against this project's CLAUDE.md and conventions.
 
 ## 1. Set scope (state it before you start)
 - A path/file/area in `$ARGUMENTS` → audit that. `repo`/`full` → the whole codebase. Empty or `diff` → the current uncommitted changes (`git status`, `git diff`, `git diff --staged`). Default is the diff — "review what I just did."

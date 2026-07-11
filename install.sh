@@ -43,6 +43,7 @@ cp "$SRC"/agents/*.md                   "$DST/agents/"
 cp "$SRC/hooks/block-ai-attribution.py" "$DST/hooks/block-ai-attribution.py"
 cp "$SRC/hooks/protect-tests.py"        "$DST/hooks/protect-tests.py"
 cp "$SRC/hooks/session-status.py"       "$DST/hooks/session-status.py"
+cp "$SRC/hooks/pre-compact.py"          "$DST/hooks/pre-compact.py"
 chmod +x "$DST"/hooks/*.py
 
 echo "Claude Code:"
@@ -65,6 +66,9 @@ if not has("protect-tests.py"):
 start = s["hooks"].setdefault("SessionStart", [])
 if not any("session-status.py" in h.get("command","") for e in start for h in e.get("hooks",[])):
     start.append({"hooks":[{"type":"command","command":"python3 ~/.claude/hooks/session-status.py"}]})
+pc = s["hooks"].setdefault("PreCompact", [])
+if not any("pre-compact.py" in h.get("command","") for e in pc for h in e.get("hooks",[])):
+    pc.append({"hooks":[{"type":"command","command":"python3 ~/.claude/hooks/pre-compact.py"}]})
 # Make the agent ask before reading a secret file, even in auto-accept mode.
 ask = s.setdefault("permissions", {}).setdefault("ask", [])
 for rule in ["Read(./.env)", "Read(./.env.*)", "Bash(cat .env*)", "Bash(printenv*)", "Bash(env)"]:
@@ -84,7 +88,7 @@ Done.
 
 Claude Code  - full kit: /phurti-architect  /phurti-feature  /phurti-fix  /phurti-audit  /phurti-memory,
                6 review agents,
-               3 hooks, and the rules in ~/.claude/CLAUDE.md.
+               4 hooks, and the rules in ~/.claude/CLAUDE.md.
 Codex CLI    - rules installed at ~/.codex/AGENTS.md (Codex also reads a project AGENTS.md).
                Skills/commands work where Codex supports the Agent Skills spec.
 

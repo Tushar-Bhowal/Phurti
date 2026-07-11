@@ -66,6 +66,7 @@ Build only what the task needs — follow the ladder: skip what needn't exist, t
 
 ## 8. Stop and report — commit only when I ask
 - When everything passes, STOP. Summarize what you did and show the evidence. Do NOT commit yet.
+- Update `.claude/handoff.md` now, without being asked — every time a task lands. Overwrite it, never append; keep it under ~40 lines: the current goal, what's done, the next 3-5 concrete tasks, the key decisions and why (so they aren't reversed), known issues, and how to run/test. A SessionStart hook injects this file into the next session automatically, so this is what lets me `/clear` and resume without ever re-briefing you. A file that grows gets injected every session and costs tokens — keep it lean. (Add `.claude/handoff.md` to `.gitignore`; it's scratch.)
 - Commit only when I explicitly tell you to (e.g. "commit" or "commit and push"). I commit when I'm satisfied — never automatically.
 - When I ask: commit with a clear, descriptive message scoped to this change, and push or open a PR only if I say so. Write the message as a human engineer would — never mention Claude, AI, an assistant, or which model was used; no "Generated with..." footer, no AI co-author trailer, no tool attribution anywhere in the message or PR.
 - After committing, remind me to run `/clear` before starting an unrelated task (you can't run it yourself — it resets context and only I can trigger it).

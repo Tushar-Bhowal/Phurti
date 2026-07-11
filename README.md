@@ -47,7 +47,7 @@ Claude Code is the first-class, fully-enforced path. On the instruction-only age
 | `/phurti-audit` | **Read-only** review of the diff, a path, or the repo. Routes to domain agents, verifies each finding (`file:line`), returns one prioritized report. No edits, no commits. |
 | `/phurti-memory` | Generate / audit / prune a lean project memory file (`AGENTS.md`, or `CLAUDE.md` on Claude Code). Leaves good lines alone; proposes only gaps and trims. |
 | 6 review agents | Read-only domain reviewers — frontend, backend, db, test, deploy, ai — auto-invoked by domain, each returning a prioritized list. |
-| 3 hooks | Block AI-attributed commits, block test weakening, print git status into every session. The first two are enforced every time (Claude Code/Codex). |
+| 4 hooks | Block AI-attributed commits, block test weakening, inject git status **and the last session's handoff** into every session, and refresh that handoff before context is compacted away. The first two are enforced every time (Claude Code/Codex). |
 | `AGENTS.md` | The single source of truth for the always-on ruleset. Per-agent adapters are generated from it. |
 
 ## Token reduction — honest version

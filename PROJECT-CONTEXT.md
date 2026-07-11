@@ -70,7 +70,8 @@ phurti/
 ├── hooks/
 │   ├── block-ai-attribution.py     # PreToolUse(Bash): blocks git commits with AI/model attribution (exit 2)
 │   ├── protect-tests.py            # PreToolUse(Edit): blocks removing assertions / adding skip markers
-│   └── session-status.py           # SessionStart: prints git status (branch, last commit, dirty files)
+│   ├── session-status.py           # SessionStart: injects git status + .claude/handoff.md (resume for free)
+│   └── pre-compact.py              # PreCompact: refresh the handoff before context is summarized away
 ├── .github/copilot-instructions.md # GENERATED adapter — GitHub Copilot rules
 ├── .agents/rules/phurti.md         # GENERATED adapter — Antigravity rules
 ├── scripts/build-adapters.sh       # regenerates the adapters from AGENTS.md; --check fails on drift
@@ -220,6 +221,16 @@ higher quality floor — not a guaranteed lower bill. Do not cite outside benchm
 - **`/phurti-feature` does NOT audit memory** — that's `/phurti-memory`'s job; keep them separate.
 - **No external project names anywhere** — describe patterns generically; don't borrow others' metrics.
 - **Secret protection uses native permissions, not a custom regex hook** — install adds `.env` `ask`-rules to `settings.json` (the agent must prompt before reading a secret file, even in auto mode), and `AGENTS.md` forbids hardcoding secrets. Commit-time scanning is a documented gitleaks/trufflehog recommendation, not a reinvented scanner (a git-level scanner also covers all agents, not just Claude Code). Defense-in-depth — the real boundary is keeping real keys off the machine the agent reads.
+- **Cross-session resume is a hook, not a request** — `/phurti-feature` and `/phurti-fix` overwrite
+  `.claude/handoff.md` when a task lands (goal / done / next / decisions / issues), and the SessionStart
+  hook injects it into the next session automatically, so `/clear` never costs you a re-brief. A PreCompact
+  hook covers the case you can't control — *automatic* compaction when context fills — by telling the model
+  to refresh the handoff first, and dropping git breadcrumbs if no handoff exists (it never overwrites one).
+  The read side is guaranteed (a hook); the write side is an instruction, so it's reliable, not guaranteed.
+  **The handoff must be overwritten and stay lean (~40 lines)** — it's injected every session, so a growing
+  file costs tokens instead of saving them. The saving comes from `/clear` dropping the conversation, not
+  from the file. Don't rebuild `claude-mem` or duplicate Claude Code's native Auto Memory (durable facts);
+  the handoff carries *task state*, which those don't.
 - **Auto-invocation is split, not blanket** — `/phurti-feature`, `/phurti-fix`, `/phurti-architect`, and
   `/phurti-audit` are model-invokable (no `disable-model-invocation`), so the workflow applies even when you
   forget to type the command. Their `description` is the router, so each must carry explicit "use this / use

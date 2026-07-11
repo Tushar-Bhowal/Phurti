@@ -36,6 +36,7 @@ If `$ARGUMENTS` points at an audit findings file (`.claude/plans/audit-findings-
 
 ## 5. Stop and report — commit only when I ask
 - When it's fixed and verified, STOP. Give me the root cause (one line), the fix, and the evidence. Do not commit.
+- Update `.claude/handoff.md` now, without being asked — overwrite it, keep it under ~40 lines (goal, what's done, next steps, key decisions, known issues, how to run/test). A SessionStart hook injects it into the next session, so I can `/clear` and resume without re-briefing you. Never append; a growing file costs tokens every session.
 - Commit only when I explicitly say so. After committing, remind me to `/clear`.
 
 If this turns out to be a missing feature or a multi-file change rather than a bug, say so and point me to `/phurti-feature` instead of forcing it through here.

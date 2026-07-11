@@ -14,7 +14,7 @@ UPDATE APPLIED. To make the changes take effect:
 1. Restart your agent (quit and reopen) so it reloads skills, agents, and rules.
 2. Verify in Claude Code, in any repo:
      /phurti-architect  /phurti-feature  /phurti-fix  /phurti-audit  /phurti-memory   appear in the menu
-     /hooks    lists the 3 hooks
+     /hooks    lists the 4 hooks
      /agents   lists the 6 review agents
 
 That's it - Phurti is up to date.

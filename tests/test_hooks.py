@@ -1,0 +1,180 @@
+import json
+from pathlib import Path
+import subprocess
+import sys
+import tempfile
+import unittest
+
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+class HookTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.repo = Path(self.temp.name)
+        subprocess.run(['git', 'init', '-q', str(self.repo)], check=True)
+
+    def hook(self, name, payload, codex=False, cwd=None):
+        command = [sys.executable, str(ROOT / 'hooks' / name)]
+        if codex:
+            command += ['--host', 'codex']
+        return subprocess.run(command, input=json.dumps(payload), text=True,
+                              capture_output=True, cwd=cwd or self.repo)
+
+    def edit(self, tool, fields):
+        return self.hook('protect-tests.py', {'cwd': str(self.repo), 'tool_name': tool, 'tool_input': fields})
+
+    def patch(self, text):
+        return self.edit('apply_patch', {'command': '*** Begin Patch\n' + text + '\n*** End Patch'})
+
+    def test_claude_edit_blocks_removed_assertion(self):
+        result = self.edit('Edit', {'file_path': 'tests/test_app.py', 'old_string': 'assert value == 1', 'new_string': 'pass'})
+        self.assertEqual(result.returncode, 2, result.stderr)
+
+    def test_claude_edit_allows_strengthened_test(self):
+        result = self.edit('Edit', {'file_path': 'tests/test_app.py', 'old_string': 'assert value', 'new_string': 'assert value == 1'})
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_claude_write_reads_old_file_relative_to_payload_cwd(self):
+        (self.repo / 'test_app.py').write_text('assert value\n')
+        result = self.hook('protect-tests.py', {'cwd': str(self.repo), 'tool_name': 'Write', 'tool_input': {'file_path': 'test_app.py', 'content': 'pass'}}, cwd=ROOT)
+        self.assertEqual(result.returncode, 2, result.stderr)
+
+    def test_claude_multiedit_blocks_skips(self):
+        result = self.edit('MultiEdit', {'file_path': 'app.test.ts', 'edits': [{'old_string': 'it(', 'new_string': 'it.skip('}]})
+        self.assertEqual(result.returncode, 2, result.stderr)
+
+    def test_codex_patch_blocks_assertion_removal(self):
+        result = self.patch('*** Update File: test_app.py\n@@\n-assert answer == 42\n+pass')
+        self.assertEqual(result.returncode, 2, result.stderr)
+
+    def test_codex_patch_allows_assertion_replacement(self):
+        result = self.patch('*** Update File: test_app.py\n@@\n-assert answer\n+assert answer == 42')
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_codex_patch_checks_each_file(self):
+        result = self.patch('*** Update File: a.test.ts\n@@\n-expect(value).toBe(1)\n+pass\n*** Update File: b.test.ts\n@@\n+expect(other).toBe(2)')
+        self.assertEqual(result.returncode, 2, result.stderr)
+        self.assertIn('a.test.ts', result.stderr)
+
+    def test_codex_patch_blocks_new_skipped_test(self):
+        result = self.patch('*** Add File: tests/new.ts\n+it.skip("example", () => {})')
+        self.assertEqual(result.returncode, 2, result.stderr)
+
+    def test_codex_patch_blocks_test_deletion(self):
+        result = self.patch('*** Delete File: tests/fixture_test.py')
+        self.assertEqual(result.returncode, 2, result.stderr)
+
+    def test_codex_patch_detects_move_out_of_test_path(self):
+        result = self.patch('*** Update File: tests/example.ts\n*** Move to: src/example.ts\n@@\n const x = 1')
+        self.assertEqual(result.returncode, 2, result.stderr)
+
+    def test_codex_patch_allows_test_rename(self):
+        result = self.patch('*** Update File: a.test.ts\n*** Move to: b.test.ts\n@@\n expect(value).toBe(1)')
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_non_test_changes_are_allowed(self):
+        result = self.patch('*** Update File: src/app.py\n@@\n-assert value\n+pass')
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_hooks_ignore_unrecognized_payloads(self):
+        for hook in ('protect-tests.py', 'block-ai-attribution.py'):
+            for payload in (None, [], {}, {'tool_input': []}):
+                with self.subTest(hook=hook, payload=payload):
+                    self.assertEqual(self.hook(hook, payload).returncode, 0)
+
+    def test_commit_attribution_both_hosts(self):
+        for codex in (False, True):
+            for message in ('Generated with Claude Code', 'Implemented by Codex', 'Co-Authored-By: Example <example@example.com>'):
+                with self.subTest(codex=codex, message=message):
+                    result = self.hook('block-ai-attribution.py', {'tool_name': 'Bash', 'tool_input': {'command': f'git commit -m "{message}"'}}, codex)
+                    self.assertEqual(result.returncode, 2, result.stderr)
+
+    def test_commit_message_file(self):
+        (self.repo / 'message.txt').write_text('Fix tests\n\nGenerated by ChatGPT\n')
+        result = self.hook('block-ai-attribution.py', {'cwd': str(self.repo), 'tool_name': 'Bash', 'tool_input': {'command': 'git commit --file message.txt'}})
+        self.assertEqual(result.returncode, 2, result.stderr)
+
+    def test_commit_message_file_respects_git_directory_options(self):
+        directory = self.repo / 'nested'
+        directory.mkdir()
+        (directory / 'message.txt').write_text('Generated by Codex')
+        for command in ('git -C nested commit -F message.txt', 'git -Cnested commit --file=message.txt'):
+            with self.subTest(command=command):
+                result = self.hook('block-ai-attribution.py', {'cwd': str(self.repo), 'tool_name': 'Bash', 'tool_input': {'command': command}})
+                self.assertEqual(result.returncode, 2, result.stderr)
+
+    def test_ordinary_commit_can_name_integration(self):
+        result = self.hook('block-ai-attribution.py', {'tool_name': 'Bash', 'tool_input': {'command': 'git commit -m "Support Claude Code and Codex workflows"'}})
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_non_commit_command_allowed(self):
+        result = self.hook('block-ai-attribution.py', {'tool_name': 'Bash', 'tool_input': {'command': 'printf "Generated by Codex"'}})
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_resume_from_nested_directory_uses_shared_handoff(self):
+        (self.repo / '.phurti').mkdir()
+        (self.repo / '.phurti/handoff.md').write_text('Continue the API migration')
+        nested = self.repo / 'src/module'
+        nested.mkdir(parents=True)
+        result = self.hook('session-status.py', {'cwd': str(nested), 'model': 'example-model'}, codex=True, cwd=ROOT)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn('Continue the API migration', result.stdout)
+        self.assertIn('Active model: example-model', result.stdout)
+
+    def test_legacy_handoff_then_shared_precedence(self):
+        (self.repo / '.claude').mkdir()
+        (self.repo / '.claude/handoff.md').write_text('legacy task')
+        result = self.hook('session-status.py', {'cwd': str(self.repo)})
+        self.assertIn('legacy task', result.stdout)
+        (self.repo / '.phurti').mkdir()
+        (self.repo / '.phurti/handoff.md').write_text('shared task')
+        result = self.hook('session-status.py', {'cwd': str(self.repo)})
+        self.assertIn('shared task', result.stdout)
+        self.assertNotIn('legacy task', result.stdout)
+
+    def test_handoff_output_is_bounded(self):
+        (self.repo / '.phurti').mkdir()
+        (self.repo / '.phurti/handoff.md').write_text('x' * 20000)
+        result = self.hook('session-status.py', {'cwd': str(self.repo)})
+        self.assertIn('truncated', result.stdout)
+        self.assertLess(len(result.stdout), 6500)
+
+    def test_compaction_captures_state_and_preserves_narrative(self):
+        result = self.hook('pre-compact.py', {'cwd': str(self.repo), 'trigger': 'auto'}, codex=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn('systemMessage', json.loads(result.stdout))
+        path = self.repo / '.phurti/handoff.md'
+        self.assertIn('Git state', path.read_text())
+        ignored = subprocess.run(['git', 'check-ignore', '.phurti/handoff.md'], cwd=self.repo, capture_output=True)
+        self.assertEqual(ignored.returncode, 0)
+        path.write_text('important decision')
+        self.hook('pre-compact.py', {'cwd': str(self.repo)}, codex=True)
+        self.assertEqual(path.read_text(), 'important decision')
+
+    def test_compaction_preserves_local_excludes(self):
+        exclude = self.repo / '.git/info/exclude'
+        exclude.write_text('personal-pattern')
+        self.hook('pre-compact.py', {'cwd': str(self.repo)}, codex=True)
+        self.assertEqual(exclude.read_text(), 'personal-pattern\n/.phurti/\n')
+        self.hook('pre-compact.py', {'cwd': str(self.repo)}, codex=True)
+        self.assertEqual(exclude.read_text(), 'personal-pattern\n/.phurti/\n')
+
+    def test_compaction_preserves_legacy_handoff(self):
+        (self.repo / '.claude').mkdir()
+        (self.repo / '.claude/handoff.md').write_text('legacy decision')
+        self.hook('pre-compact.py', {'cwd': str(self.repo)}, codex=True)
+        self.assertFalse((self.repo / '.phurti/handoff.md').exists())
+        self.assertEqual((self.repo / '.claude/handoff.md').read_text(), 'legacy decision')
+
+    def test_session_outside_git_is_noop(self):
+        with tempfile.TemporaryDirectory() as directory:
+            result = self.hook('session-status.py', {'cwd': directory})
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(result.stdout, '')
+
+
+if __name__ == '__main__':
+    unittest.main()

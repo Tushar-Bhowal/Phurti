@@ -5,24 +5,33 @@ argument-hint: '[what to architect — an app, a feature, or a system change]'
 allowed-tools: Read, Grep, Glob, Bash, Write
 ---
 
-# Architect: $ARGUMENTS
+# Architecture task
+
+## Host conventions
+- Use the task in the invoking message and conversation. On Claude Code, supplied skill arguments are also task input; never treat an unexpanded placeholder as a task.
+- Invoke skills as `/phurti-name` in Claude Code and `$phurti-name` in Codex CLI/IDE (or select the skill in the app). Adapt the command examples below to the active host.
+- Follow `AGENTS.md` on Codex and `CLAUDE.md` on Claude Code, including applicable nested rules. Use the host's available question tool, or ask in chat if it is unavailable in the current mode.
+- At the repository root, keep new plans in `.phurti/plans/` and task handoffs in `.phurti/handoff.md`. Read an explicitly supplied legacy `.claude/plans/` file in place; accept legacy `/phurti-*` task tags. At startup, read the shared handoff if present, otherwise `.claude/handoff.md`, and verify it against the current request. When creating scratch state, use a local Git exclusion for `.phurti/` if it is not already ignored; this local exclusion is the only permitted write outside the output file.
+- Respect approval already given in this conversation. Ask again only when a new decision changes the agreed scope or approach.
 
 Design the system above before a line of code. Your job here is the *thinking* — requirements, the right approach, the trade-offs, the risks — captured as an architecture doc that `/phurti-feature` then builds. Do NOT write application code in this run; your only output is the architecture doc. Follow this project's memory file (AGENTS.md / CLAUDE.md) and existing conventions — they override anything here.
 
 This is design, not gold-plating. Architect only what the thing needs — apply the ladder: skip what needn't exist, then the standard library, then a native platform feature, then an already-installed dependency, then the minimum that fully works. The best architecture is the simplest one that meets the real requirements and constraints; don't add layers, services, queues, or abstractions for scale nobody asked for. Propose the lean design and name what you deliberately left out and why.
 
 ## 0. Set scope and model
-- If `$ARGUMENTS` is empty, ask what I want to architect — a whole app, a feature, or a system change — and the goal in plain words. Restate it as a clear problem statement and confirm before designing.
+- If no task was supplied, ask what I want to architect — a whole app, a feature, or a system change — and the goal in plain words. Restate it as a clear problem statement and confirm before designing.
 - State whether this is **whole-app** (greenfield or a major subsystem) or **feature-level** (a feature inside an existing app) — the depth differs. If it turns out to be a small, single-approach change, say so and point me to `/phurti-feature` instead of over-architecting it.
-- Real architecture needs Opus (the top reasoning tier). A skill can't pin its own model in every host — the VS Code Claude extension has no `model` field for skills — so I recommend rather than force it: confirm you're on Opus, and if you're on a lighter model switch with `/model` before I go deep. I can't switch it for you.
+- Recommend a model proportionate to the design: Claude Code uses Opus for substantial architecture. Codex uses GPT-6 Astra for difficult architectural trade-offs, or GPT-6.1 Sol for a well-bounded feature design.
+
+Recommend only models available to this user. The Codex names here are a starting policy verified on 2026-11-08, not permanent aliases: consult the host's model list or [current official model guidance](https://learn.chatgpt.com/docs/models) when availability or names are uncertain; never claim you inspected a model list you cannot access. If account availability cannot be checked, label the recommendation conditional and continue on the current model. Start at the supported default effort (Luna High, Astra Light/`low`, Sol's client default), then suggest higher effort for difficult reasoning. Include the model, effort, and one sentence explaining the choice. Codex CLI uses `/model`; IDE/app users use the model picker. Claude Code uses `/model`. Recommend without changing the main session or blocking work on a switch; proceed with the user's chosen model.
 
 ## 1. Understand the requirements and constraints (ask, don't assume)
-- Draw out the real requirements: what it must do, who uses it, the scale / latency / data expectations, and the hard constraints — existing stack, deadlines, team size, budget, compliance. If any of these are unknown and would change the design, STOP and ask me with AskUserQuestion. Never invent a requirement, a scale number, or a constraint.
-- For a feature inside an existing app: map what's already there FIRST. Use a subagent to read the relevant parts of the codebase (data model, existing patterns, integration points) and return a short map, so the main context stays clean. The new design must fit existing conventions, not fight them.
-- State the requirements and constraints back to me and confirm before you design. Everything downstream depends on getting these right — a wrong assumption here is the most expensive kind of mistake.
+- Draw out the real requirements: what it must do, who uses it, the scale / latency / data expectations, and the hard constraints — existing stack, deadlines, team size, budget, compliance. If any of these are unknown and would change the design, STOP and ask me using an available question tool or chat. Never invent a requirement, a scale number, or a constraint.
+- For a feature inside an existing app: map what's already there FIRST. When delegation is available, use a subagent to read the relevant parts of the codebase (data model, existing patterns, integration points) and return a short map, so the main context stays clean. The new design must fit existing conventions, not fight them.
+- State the requirements and constraints back to me; confirm anything not already approved before designing. Everything downstream depends on getting these right — a wrong assumption here is the most expensive kind of mistake.
 
 ## 2. Generate candidate approaches (don't marry the first idea)
-- Produce 2-3 genuinely different approaches, not one idea with cosmetic variations. For a substantial design, spawn a subagent per approach to develop each independently and in parallel, each returning a short write-up — then you synthesize. Independent options surface trade-offs a single pass would miss.
+- Produce 2-3 genuinely different approaches, not one idea with cosmetic variations. For a substantial design, when delegation is available, spawn a subagent per approach to develop each independently and in parallel, each returning a short write-up — then you synthesize. Independent options surface trade-offs a single pass would miss.
 - For each approach: the shape (components, data flow, key technology choices), what it's good at, and where it strains.
 
 ## 3. Compare and choose (the trade-offs are the point)
@@ -41,14 +50,14 @@ This is design, not gold-plating. Architect only what the thing needs — apply 
 
 ## 6. Write the architecture doc and hand off
 - Present the design to me and WAIT for approval before writing anything. If I want changes, revise — don't proceed on an unapproved design, even in auto / auto-accept mode.
-- On approval, write it to `.claude/plans/architecture-<name>.md` in the shape under **Output format** below — Markdown with XML-tagged sections, exact paths with the integration seam marked, and a checkbox task list where each task carries a definition of done and is tagged `→ /phurti-feature`. This is the ONLY file you write — no application code. (Make sure `.claude/plans/` is in `.gitignore`.)
-- Then hand me the tiny message to paste: `/phurti-feature build the architecture in .claude/plans/architecture-<name>.md`. The detail lives in the file, so I never re-type it — `/phurti-feature` reads it and builds the phases in order.
+- On approval, write it to `.phurti/plans/architecture-<name>.md` in the shape under **Output format** below — Markdown with XML-tagged sections, exact paths with the integration seam marked, and a checkbox task list where each task carries a definition of done and is tagged `→ /phurti-feature`. This is the only output file; the local scratch exclusion described above is also permitted. Write no application code. (Keep `.phurti/` excluded from Git.)
+- Then hand me the tiny message to paste: `/phurti-feature build the architecture in .phurti/plans/architecture-<name>.md`. The detail lives in the file, so I never re-type it — `/phurti-feature` reads it and builds the phases in order.
 
 If anything about the requirements, scale, or constraints is unclear at any point, STOP and ask a specific question rather than designing on a guess. Tell me what you're doing at each phase boundary, and if you catch yourself about to assume something load-bearing, ask instead.
 
 ## Output format for the architecture doc
 
-Write Markdown with the XML-tagged sections below — Claude keys off the tags, the prose stays readable. Fill every section, keep each tight, and ground every path in the real repo. This is a shape to aim for, not a rigid mold: a data pipeline or a refactor won't look identical, so adapt the sections to the design rather than forcing the design into the sections.
+Write Markdown with the XML-tagged sections below — the tags identify the sections and the prose stays readable. Fill every section, keep each tight, and ground every path in the real repo. This is a shape to aim for, not a rigid mold: a data pipeline or a refactor won't look identical, so adapt the sections to the design rather than forcing the design into the sections.
 
 ~~~
 # Architecture — <name>

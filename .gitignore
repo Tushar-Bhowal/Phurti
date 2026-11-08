@@ -1,3 +1,6 @@
 .DS_Store
 *.log
 __pycache__/
+.phurti/
+.claude/plans/
+.claude/handoff.md

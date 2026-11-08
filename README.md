@@ -1,136 +1,135 @@
 # Phurti
 
-A portable senior-engineer workflow for AI coding agents. One ruleset, one set of skills — installed once, working across agents. *Phurti* (फुर्ती): agility, swiftness — moving fast and light. That's the whole idea — less code, fewer tokens, less manual effort, without cutting corners on safety.
+A portable senior-engineer workflow for Claude Code and Codex. Plan, implement, verify, review, and resume work with the same five skills. *Phurti* (फुर्ती) means agility: build only what the task needs, with evidence that it works.
 
-> In testing and evolving. Built against current agent formats (mid-2026); these shift, so if a path or command changes, the principles still hold — update the file and send a PR.
+## What is included
 
-## The problem it solves
-
-Working with an AI coding agent, the same friction shows up every day, on every tool:
-
-- You **re-type the same instructions** each task — plan first, write tests, verify, no AI in the commit message.
-- Output is **inconsistent**, the agent **over-engineers** simple work, **over-comments** (a banner on every file), or **commits before you're ready**.
-- Commits get **AI-attribution footers** you don't want; tests quietly get **weakened** to pass.
-- Different agents (Claude Code, Codex, Copilot, Antigravity) each need the same rules in **their own format**.
-
-Phurti fixes each with the right mechanism — a workflow skill for the repetition, read-only review agents for depth, deterministic hooks for the rules that must never break, and one portable ruleset for every agent.
-
-| Friction | Handled by |
+| Skill | Purpose |
 | --- | --- |
-| Re-typing the workflow every time | `/phurti-feature` skill |
-| Bug fixes that patch the symptom | `/phurti-fix` (reproduce → root cause → regression test) |
-| Wanting a review without changes | `/phurti-audit` (read-only, one prioritized report) |
-| Over-engineering / wasted tokens | the **build-only-what's-needed ladder** (in the ruleset + skills) |
-| Banner/narration & noisy comments | the ruleset (essentials only) |
-| AI footers in commits | commit-block hook (enforced, Claude Code/Codex) |
-| Weakened / skipped tests | test-protect hook (enforced, Claude Code/Codex) |
-| Same rules across many agents | one `AGENTS.md` + generated per-agent adapters |
+| `phurti-architect` | Explore requirements and alternatives, then produce an approved architecture and phased implementation plan. |
+| `phurti-feature` | Build a feature or refactor: recommend a model, plan, implement, verify, and obtain a focused review. |
+| `phurti-fix` | Reproduce a bug, diagnose its root cause, make the smallest correct fix, and prove it with a regression check. |
+| `phurti-audit` | Review a diff, path, or repository and save actionable findings. No source edits or commits. |
+| `phurti-memory` | Inspect or refine project instructions while preserving accurate existing content. Explicit invocation only. |
 
-## Works with
+Six domain reviewers cover frontend, backend, database, tests, deployment, and AI integrations. Four hooks check commit attribution and test weakening, show session status, and preserve a handoff through compaction. Skills recommend a model before substantial work and commit only when explicitly asked.
 
-| Agent | Always-on rules | Skills (`/phurti-feature` etc.) | Hooks (enforced) |
-| --- | --- | --- | --- |
-| **Claude Code** | ✅ `~/.claude/CLAUDE.md` | ✅ | ✅ |
-| **Codex CLI** | ✅ `AGENTS.md` | ✅ where Agent-Skills supported | ⚠️ partial |
-| **Copilot (VS Code)** | ✅ `.github/copilot-instructions.md` | — | — |
-| **Antigravity** | ✅ `.agents/rules/` | as skills | — |
+## Compatibility
 
-Claude Code is the first-class, fully-enforced path. On the instruction-only agents the rules are **advisory** (loaded as context), and the hooks don't apply — that's an honest limit of those hosts, not a bug.
+| Host | Rules | Skills | Reviewers | Hooks |
+| --- | --- | --- | --- | --- |
+| Claude Code | `~/.claude/CLAUDE.md` | `/phurti-*` | Native Markdown agents | Claude tool and lifecycle inputs |
+| Current local Codex CLI / IDE | `$CODEX_HOME/AGENTS.md` | `$phurti-*` | Native TOML agents | Codex tool and lifecycle inputs; trust required |
+| Codex desktop local mode | Same local configuration | Select a skill | Uses local Codex agents | Review hooks in the app; verify your client |
+| Copilot / Antigravity | Generated rule adapters | Not installed | Not installed | Not installed |
 
-## What's inside
+Codex home defaults to `~/.codex`; skills go in `~/.agents/skills`. Native custom agents and lifecycle hooks require a current Codex client. This implementation targets the documented formats and was checked with Codex CLI `0.164.0-alpha.11.1`; older versions may differ. Cloud orchestration has different hook support and is not covered by this local installer.
 
-| Piece | What it does |
-| --- | --- |
-| `/phurti-architect` | Design a whole app or a feature **before any code** (Opus-work). Draws out requirements/constraints, maps the existing code, weighs 2–3 approaches, picks one with the trade-offs stated, then phases it into a build plan — written to an architecture doc that `/phurti-feature` implements. Skill-shaped orchestrator; writes no code. |
-| `/phurti-feature` | Build/phurti-fix anything end to end. Brain-dump or `/phurti-feature <task>`; it restates + confirms, recommends a model, plans, implements (clean comments, build-only-what's-needed), verifies with evidence, routes to a review agent, and commits **only when you ask** — no AI attribution. |
-| `/phurti-fix` | Bug-shaped: reproduce with a failing test → find the **root cause** (not the symptom) → smallest correct diff → regression test → verify. Points to `/phurti-feature` for larger changes. |
-| `/phurti-audit` | **Read-only** review of the diff, a path, or the repo. Routes to domain agents, verifies each finding (`file:line`), returns one prioritized report. No edits, no commits. |
-| `/phurti-memory` | Generate / audit / prune a lean project memory file (`AGENTS.md`, or `CLAUDE.md` on Claude Code). Leaves good lines alone; proposes only gaps and trims. |
-| 6 review agents | Read-only domain reviewers — frontend, backend, db, test, deploy, ai — auto-invoked by domain, each returning a prioritized list. |
-| 4 hooks | Block AI-attributed commits, block test weakening, inject git status **and the last session's handoff** into every session, and refresh that handoff before context is compacted away. The first two are enforced every time (Claude Code/Codex). |
-| `AGENTS.md` | The single source of truth for the always-on ruleset. Per-agent adapters are generated from it. |
-
-## Token reduction — honest version
-
-The reliable lever is **writing less code**, via the ladder in `AGENTS.md`: before writing, stop at the first rung that holds — needn't exist → stdlib → native feature → installed dep → one line → minimum that works; never cutting validation, error handling, security, or accessibility. Writing less code is what actually cuts tokens — but it's **not universal**: a reasoning model that spends thinking tokens deliberating the rungs can go the other way, and the review agents are real calls that add tokens. Net effect depends on the task. Measure your own. The dependable wins are **less code, less re-typing, and a higher quality floor** — not a guaranteed lower bill.
-
-## Requirements
-
-- The agent you're using (Claude Code, Codex, Copilot, or Antigravity)
-- **Python 3** for the hooks (Claude Code/Codex) — `python3 --version`
-- **git**
+See the official [skills](https://learn.chatgpt.com/docs/build-skills), [subagents](https://learn.chatgpt.com/docs/agent-configuration/subagents), and [hooks](https://learn.chatgpt.com/docs/hooks) documentation. A successful file installation does not prove that a particular client has enabled or trusted the hooks.
 
 ## Install
 
-```
+Requirements: Python 3.9+, git, and the host you intend to use. Development tests use Python 3.11+ for the standard-library TOML parser. No third-party Python packages are required by the kit.
+
+```sh
 git clone https://github.com/Tushar-Bhowal/Phurti.git phurti
 cd phurti
-bash install.sh
+bash install.sh                  # both Claude Code and Codex
+bash install.sh --agent codex    # Codex only
+bash install.sh --agent claude   # Claude Code only
 ```
 
-`install.sh` sets up the Claude Code kit in full, installs the ruleset for Codex at `~/.codex/AGENTS.md`, and prints copy steps for Copilot and Antigravity. Non-destructive and safe to re-run. (Or from the zip: unzip, `cd` in, `bash install.sh`.)
+The installer preserves unrelated settings, hooks, and instructions. It replaces the marked Phurti rule block on updates and refreshes Phurti skill, reviewer, and hook files. Changed files get a sibling `.phurti-backup` containing their previous version. Invalid JSON or malformed rule markers stop installation before writing configuration; disk errors during writing can still leave a partial install, which can be rerun.
 
-## Update
+`CODEX_HOME`, when set, controls the Codex rules, agents, and hooks destination. It does not move user skills from `~/.agents/skills`. `--home /tmp/phurti-check` stages an installation under that directory, ignoring `CODEX_HOME` and leaving your actual user configuration alone.
 
-```
-cd phurti && git pull && bash update.sh
-```
+Codex hooks are merged into `hooks.json`; `config.toml`, model choices, permission settings, and existing inline hooks are preserved. If you previously configured Phurti hooks manually in TOML or another active layer, remove those duplicates yourself: Codex runs hooks from all active sources.
 
-Then restart your agent so it reloads skills, agents, and rules.
+## Activate and check
+
+After installation, reload your client if the skills have not appeared.
+
+For Codex CLI:
+
+1. Open `/skills` and check for all five `phurti-*` skills.
+2. Open `/hooks`, review the four Phurti hooks, and trust them. New or changed hook definitions may require another review. Hooks disabled by user or managed policy remain disabled.
+3. Invoke `$phurti-feature` with a small task and confirm it recommends a model and follows the workflow.
+4. During a domain review, inspect `/subagents` to confirm the selected reviewer ran. If delegation is disabled or unavailable, the skill reports a non-independent fallback review.
+
+In the IDE, use the skill selector or `$` mention and the model picker. If hook review is not exposed in that client, review the same local hooks through Codex CLI. In the desktop app, use the skill selector and Settings > Hooks. GUI activation and account-specific model availability should be checked in the client you use.
+
+For Claude Code, check `/phurti-feature`, `/agents`, and `/hooks` after reloading.
 
 ## Use
 
-```
-/phurti-architect a multi-tenant billing system         # design an app/feature before any code
-/phurti-feature build the architecture in .claude/plans/architecture-billing.md
-/phurti-feature                                    # bare: brain-dump, it restates & confirms
-/phurti-feature add a logout button that clears the session
-/phurti-fix login fails after the session times out
-/phurti-audit                                      # read-only review of the current diff
-/phurti-audit src/auth                             # audit a specific area
-/phurti-memory                               # generate/phurti-audit this project's memory file
-```
+Codex CLI / IDE examples:
 
-Attach an image or paste an error log alongside `/phurti-feature` when relevant. Review agents auto-route by domain; don't run all six on every task. For big multi-session work the skill keeps a worklog in `.claude/plans/` (add to `.gitignore`).
-
-## Where everything lands
-
-```
-~/.claude/                       # Claude Code
-├── settings.json                # hooks merged in
-├── CLAUDE.md                    # rules appended (your content preserved)
-├── skills/{phurti-architect,phurti-feature,phurti-fix,phurti-audit,phurti-memory}/SKILL.md
-├── agents/phurti-{frontend,backend,db,test,deploy,ai}-review.md
-└── hooks/{block-ai-attribution,protect-tests,session-status}.py
-
-~/.codex/AGENTS.md               # Codex: rules appended
-<your repo>/.github/copilot-instructions.md   # Copilot (copy in)
-<your repo>/.agents/rules/phurti.md            # Antigravity (copy in)
+```text
+$phurti-architect design a multi-tenant billing system
+$phurti-feature build the architecture in .phurti/plans/architecture-billing.md
+$phurti-feature add a logout button that clears the session
+$phurti-fix login fails after the session expires
+$phurti-audit diff
+$phurti-audit src/auth
+$phurti-memory refine this project's instructions
 ```
 
-## How it stays in sync
+On Claude Code, replace `$phurti-` with `/phurti-`. A bare feature invocation asks for the task; audit defaults to the current diff. The feature workflow respects plans already approved in the conversation. Reviewers are selected by the actual domain; all six do not run by default.
 
-`AGENTS.md` is the one source of truth for the ruleset. The per-agent adapter files are generated from it:
+## Model recommendations
 
+Phurti suggests a model, reasoning effort, and a brief reason. It continues on the model you select and does not change your session or write model defaults into configuration.
+
+| Work | Claude Code | Codex starting recommendation |
+| --- | --- | --- |
+| Clear small edits / straightforward fixes | Haiku | GPT-6 Luna |
+| Features / localized debugging / focused review | Sonnet | GPT-6.1 Sol |
+| Difficult architecture / cross-system diagnosis | Opus | GPT-6 Astra |
+| Writing / visual understanding / computer use | Choose for the task | Consider GPT-6.1 Terra where available |
+
+These are workload recommendations, not claims of equivalent model capability. The Codex policy was checked against [official model guidance](https://learn.chatgpt.com/docs/models) on 2026-11-08. Availability varies by client, account, and workspace. The skills use known available models and check current guidance when uncertain. Start with the supported default effort (Luna High, Astra Light/`low`, Sol's client default), then increase it for harder work. Codex CLI uses `/model`; IDE and desktop clients expose a model picker.
+
+Claude reviewers retain their existing `model: sonnet`. Generated Codex reviewers inherit the parent/default subagent model and effort, so installation does not pin a model unavailable to your account. Codex can honor an explicit supported subagent model choice; inheritance does not guarantee a cheaper review.
+
+## Plans and continuity
+
+New scratch state lives at the repository root:
+
+```text
+.phurti/
+├── plans/                    # architecture, audit findings, implementation plans
+└── handoff.md                # current goal, done, next steps, decisions, verification
 ```
-bash scripts/build-adapters.sh          # regenerate adapters after editing AGENTS.md
-bash scripts/build-adapters.sh --check  # CI: fail if an adapter has drifted
+
+The skills add `.phurti/` to the project's ignore file when writing scratch state. They overwrite a short handoff at useful phase boundaries and completion. SessionStart loads it on startup/resume and after compaction when the host delivers that event. Launching inside a subdirectory still finds the repository root.
+
+Existing `.claude/plans/` files are read in place when supplied. Session recovery prefers `.phurti/handoff.md` and falls back to `.claude/handoff.md`; installation does not move or delete old files. The compaction hook preserves an existing handoff, or creates git breadcrumbs if none exists after adding a local Git exclusion for `.phurti/` when needed. It cannot make the model write a narrative summary at the last instant. Without active hooks, skills read the handoff explicitly on resume.
+
+## Hook coverage and permissions
+
+- Commit attribution checks inspect shell commands containing `git commit`, including readable `-F`/`--file` message files. They reject common attribution signatures and co-author trailers. They do not intercept every way to create a commit: aliases, dynamically constructed messages, shell working-directory changes, and later interactive input can evade the heuristic.
+- Test protection checks Claude `Edit`/`MultiEdit`/`Write` inputs and Codex `apply_patch` changes for reduced assertion counts, added skip markers, and Codex test deletion/moves out of recognized test paths. It can flag legitimate refactors and miss semantic weakening or edits made through arbitrary shell scripts. It is not a proof of test quality.
+- Hooks return exit code 2 to deny recognized violations. Invalid input and unsupported tool paths are not a universal enforcement boundary. A configuration file alone does not mean a hook is running.
+- Claude installs native `.env` access prompts. These are not ported as fictional Codex `permissions.ask` rules. Codex keeps its existing sandbox and approval policy; Phurti does not add a blanket `.env` read prompt or claim that a workspace-readable secret is inaccessible. Keep real credentials outside agent-readable workspaces and use your platform's native controls.
+- Review agents are instructed not to edit. Codex agents inherit parent permissions; a custom agent file does not create a separate read-only sandbox.
+
+For commit-time secret detection across agents, use an existing scanner such as gitleaks or trufflehog. Phurti does not install one or replace your Git hooks.
+
+## Update and maintain
+
+```sh
+git pull
+bash update.sh --agent codex       # omit --agent to update both
+bash scripts/build-adapters.sh     # regenerate after rules/reviewer edits
+bash scripts/build-adapters.sh --check
+python3 -m unittest discover -s tests -v
 ```
 
-## Roadmap (goals, not promises — shaped by real use)
+`AGENTS.md` is the rule source. `agents/*.md` is the reviewer source; the generator produces Codex TOML agents under `adapters/codex/agents/` along with the existing Copilot/Antigravity rules. Do not edit generated adapters manually. Skills are shared source files, copied with their resources to each host.
 
-- More agents (Cursor, Windsurf, Cline, Gemini) via the same one-source → adapters pattern.
-- Sharper complexity → model suggestions and optional per-stack presets.
-- Battle-testing the heuristics (test-protection, audit, model recommendation) against real usage.
+Tests cover staged fresh/repeated installation, preservation and failure handling, native-format payloads for both hosts, generated TOML, and handoff recovery. A native Codex app-server check also parsed all five staged skills without errors and recognized the four hook definitions through temporary session configuration; they remained untrusted. The temporary project itself was untrusted, so this did not verify loading project hook files or running trusted hooks. These checks do not establish GUI or cloud compatibility. Test in your actual client using the activation steps above.
 
-If a goal matters to you, open an issue or PR.
-
-## Notes & honest limits
-
-- **Rules vs hooks:** skills and rules are *followed* reliably; hooks *enforce* the two non-negotiable ones every time — but hooks only run on Claude Code/Codex. Elsewhere those rules are advisory.
-- **Skills are largely portable** (the Agent Skills spec is cross-tool), but each host's exact paths differ; the install notes cover the ones built here.
-- **Heuristics aren't perfect:** the test-protect hook can occasionally flag a legit refactor; the model recommendation is a judgment call. Tune to your stack as you use it.
-- **Secrets:** install adds native `permissions.ask` rules so the agent must **ask before reading a `.env`** (even in auto-accept mode), and the ruleset forbids hardcoding secrets or committing `.env` values. These are defense-in-depth, not a wall — keep real keys out of the machine the agent sees (dummy values locally; real secrets only in your deploy environment). For commit-time protection, add a real secret-scanner (e.g. **gitleaks** or **trufflehog**) as a git pre-commit hook — the kit recommends it but doesn't install it, and a git-level scanner protects you across every agent, not just Claude Code.
+For Copilot, copy `.github/copilot-instructions.md` into your project. For Antigravity, copy `.agents/rules/phurti.md`. Those adapters provide advisory rules only.
 
 ## License
 

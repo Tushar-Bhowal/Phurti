@@ -8,7 +8,7 @@ A portable senior-engineer workflow for Claude Code and Codex. Plan, implement, 
 | --- | --- |
 | `phurti-architect` | Explore requirements and alternatives, then produce an approved architecture and phased implementation plan. |
 | `phurti-feature` | Build a feature or refactor: recommend a model, plan, implement, verify, and obtain a focused review. |
-| `phurti-fix` | Reproduce a bug, diagnose its root cause, make the smallest correct fix, and prove it with a regression check. |
+| `phurti-fix` | Diagnose a bug's root cause, make the smallest correct fix, and report evidence from approved verification. |
 | `phurti-audit` | Review a diff, path, or repository and save actionable findings. No source edits or commits. |
 | `phurti-memory` | Inspect or refine project instructions while preserving accurate existing content. Explicit invocation only. |
 
@@ -76,6 +76,16 @@ $phurti-memory refine this project's instructions
 
 On Claude Code, replace `$phurti-` with `/phurti-`. A bare feature invocation asks for the task; audit defaults to the current diff. The feature workflow respects plans already approved in the conversation. Reviewers are selected by the actual domain; all six do not run by default.
 
+## Test and browser approval
+
+For both Claude Code and Codex, the rules require explicit approval before drafting test cases, creating or changing test code/fixtures, or running any tests. This includes existing suites, temporary/ad hoc test scripts, Playwright/browser verification, and new verification screenshots. The agent proposes the smallest useful scope and waits for your answer before starting that work.
+
+Approving a feature, bug fix, architecture, or review does not automatically approve testing. A direct request for specified test work is approval for that scope; approval to create tests alone does not authorize running them, or vice versa. The agent reuses approval within its scope and asks again before expanding it. Reviewers and other skills inherit the same limits; combined commands cannot bypass them.
+
+If you decline or have not answered, the agent continues permitted implementation and static review/build/lint/typecheck, then reports what remains unverified. It must inspect command scripts before running them because a build or lint command may also launch tests. It must not claim unrun checks passed. This is a rule/workflow policy; the existing test-protection hook checks weakening, not whether you granted testing approval.
+
+To apply these rules to an existing installation, run `bash update.sh` for both agents (or use `--agent codex` / `--agent claude`), then reload the client. Review changed Codex hooks if prompted.
+
 ## Model recommendations
 
 Phurti suggests a model, reasoning effort, and a brief reason. It continues on the model you select and does not change your session or write model defaults into configuration.
@@ -122,7 +132,7 @@ git pull
 bash update.sh --agent codex       # omit --agent to update both
 bash scripts/build-adapters.sh     # regenerate after rules/reviewer edits
 bash scripts/build-adapters.sh --check
-python3 -m unittest discover -s tests -v
+python3 -m unittest discover -s tests -v  # only after explicit test approval
 ```
 
 `AGENTS.md` is the rule source. `agents/*.md` is the reviewer source; the generator produces Codex TOML agents under `adapters/codex/agents/` along with the existing Copilot/Antigravity rules. Do not edit generated adapters manually. Skills are shared source files, copied with their resources to each host.

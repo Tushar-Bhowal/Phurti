@@ -22,7 +22,7 @@ Goal: a memory file that materially changes your decisions in this repo, and not
 ## Hard rules for the output
 - Target under 200 lines; aim for 50–100. Shorter is better for small projects.
 - Include ONLY what you cannot infer from reading the code. If a line wouldn't change your behavior, cut it.
-- Write imperative, specific, verifiable rules. "Run `pnpm test`" not "test your code". "Use 2-space indentation" not "keep formatting clean".
+- Write imperative, specific, verifiable rules. "After explicit test approval, run `pnpm test`" not "test your code". "Use 2-space indentation" not "keep formatting clean".
 - Include negative rules (what to NEVER do) alongside positive ones — without them you'll default to the most common pattern, not this project's.
 - For any rule that isn't self-explanatory, add a brief reason ("use the repo's Result type, not exceptions — the API layer expects it") so the agent can generalize correctly instead of blindly copying.
 - Reserve **IMPORTANT** / **YOU MUST** for the 1–2 genuinely critical rules only. Overusing them destroys their effect.
@@ -53,7 +53,7 @@ Recommend only models available to this user. The Codex names here are a startin
 
 ## Commands
 - Build: <cmd>
-- Test: <cmd>   (prefer the single-test command for speed)
+- Test (after explicit approval): <cmd>   (prefer the single-test command for speed)
 - Lint/format: <cmd>
 - Run/dev: <cmd>
 

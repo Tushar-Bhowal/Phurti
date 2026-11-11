@@ -7,6 +7,7 @@
 - Commit messages read like a human engineer wrote them. Never mention AI, an assistant, or which model was used; no "Generated with…" footer; no co-author trailer.
 - When a requirement, file, value, or behavior is unclear, ask a specific question instead of guessing or inventing it.
 - Never hardcode secrets, API keys, tokens, or `.env` values in source — read them from environment variables; only non-sensitive defaults (a port number, `development`) may be inline. Never commit a `.env` file or a real secret value.
+- Before drafting, creating, changing, or running tests — including existing suites, ad hoc test scripts, Playwright/browser verification, and new verification screenshots — propose the smallest useful scope and wait for explicit approval. Implementation or review approval does not include test work. Reuse explicit test approval only within its agreed scope; do not bypass it through subagents or combined commands. If declined, continue permitted work and report what remains unverified.
 
 ## Build only what's needed
 

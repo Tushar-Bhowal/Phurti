@@ -25,11 +25,14 @@ Recommend only models available to this user. The Codex names here are a startin
 
 - If the scope is larger than expected (hundreds of files), stop and ask before grinding through it.
 
-## 2. Run the deterministic checks first
-- Before model judgment, run the relevant existing typecheck, linter, build, and tests where they can run without changing the working tree or external state. Use existing no-write options or temporary output directories; never run auto-fix modes. If a check cannot run read-only, report it as unrun and explain why. Fold actual failures into the audit without fixing them; report missing checks too.
+## 2. Run permitted checks first
+- Run relevant existing typecheck, linter, and build checks only where they do not change the working tree or external state. Inspect scripts first; if they also run tests or browser checks, test approval is required. Use existing no-write options or temporary output directories; never run auto-fix modes.
+- Before running any tests (including existing suites), Playwright/browser verification, or new verification screenshots, propose the smallest useful scope and WAIT for explicit approval. An audit request alone is not approval. Reuse approved scope without asking again; this read-only skill never generates or changes tests. If approval is declined or pending, continue static review and report the unrun checks.
+- Report any check that cannot run read-only as unrun, explaining why. Fold actual failures into the audit without fixing them; report missing checks too.
 
 ## 3. Delegate the heavy reading
 - Work out which domains the scope touches and hand each to its review agent, so the reading happens in that agent's own context: `phurti-frontend-review`, `phurti-backend-review`, `phurti-db-review`, `phurti-test-review`, `phurti-deploy-review`, `phurti-ai-review`. Only the ones the scope actually touches — never all six by reflex. If an agent isn't available, apply that domain's checks yourself.
+- Pass approved test/browser scope and its limits to reviewers. Review delegation alone does not authorize these checks; without approval, reviewers inspect files only and return verification limits.
 
 ## 4. Look for what matters — and skip what doesn't
 Prioritize, in order: correctness/logic bugs; security (injection, auth/IDOR, unsafe input, exposed secrets or PII); broken contracts for existing callers; missing error and edge-case handling; performance cliffs (N+1, unbounded queries). Also catch cross-cutting issues the domain agents miss: committed secrets/keys, tests that are skipped / `.only` / assert nothing, swallowed errors, and `TODO`/`FIXME` left in changed code.

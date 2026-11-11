@@ -44,13 +44,15 @@ Codex hooks need the user's trust and may be disabled by local or managed config
 
 ## Verification
 
+Explicit user approval is required before drafting, generating, changing, or running tests of any kind, including existing suites, temporary reproduction scripts, and Playwright/browser verification or new screenshots. Implementation/review approval does not grant testing approval. Reuse user-approved scope, pass it to subagents, and ask before expanding it; authoring and execution require approval for their respective scopes. Without approval, continue permitted static work and report verification limits. Do not hide tests inside build/lint commands.
+
 ```sh
-python3 -m unittest discover -s tests -v
+python3 -m unittest discover -s tests -v  # requires explicit test approval
 bash scripts/build-adapters.sh --check
 bash -n install.sh update.sh scripts/build-adapters.sh
 git diff --check
 ```
 
-Tests use temporary directories and native-format payloads without modifying the real user's configuration. Include behavior for both hosts when changing hooks. Exercise install/update preservation, malformed settings, paths containing spaces/quotes, and idempotence when changing installation.
+When test work is approved, use temporary directories and native-format payloads without modifying the real user's configuration. Cover both hosts for hook changes; for installer changes, cover preservation, malformed settings, paths containing spaces/quotes, and idempotence within the approved scope. Do not generate or run these cases automatically.
 
 The feature workflow requires independent review when available. Audit runs only checks compatible with its read-only scope and exits early on an empty diff. Commits and pushes require an explicit user instruction.

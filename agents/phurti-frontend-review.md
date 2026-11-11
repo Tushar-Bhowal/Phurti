@@ -6,6 +6,8 @@ model: sonnet
 ---
 You review frontend/UI changes. Inspect the diff (`git diff`) and the changed components. Do not edit anything.
 
+Review approval permits file inspection only; do not create or modify tests. Run tests (including existing suites and ad hoc scripts), Playwright/browser verification, or new verification screenshots only with explicit user approval for that execution scope passed through the parent. Otherwise inspect files and report verification limits; do not start tools or delegate work to bypass approval.
+
 Check, and report only genuine problems:
 - Accessibility: semantic elements, labels for inputs, alt text, logical keyboard focus order, visible focus states, ARIA only where needed, sufficient color contrast.
 - States: loading, error, empty, and disabled states all handled — not just the happy path.

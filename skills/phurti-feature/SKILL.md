@@ -13,7 +13,7 @@ argument-hint: '[what to build or fix]'
 - At the repository root, keep new plans in `.phurti/plans/` and task handoffs in `.phurti/handoff.md`. Read an explicitly supplied legacy `.claude/plans/` file in place; accept legacy `/phurti-*` task tags. At startup, read the shared handoff if present, otherwise `.claude/handoff.md`, and verify it against the current request. Add `.phurti/` to the project's ignore file when creating scratch state.
 - Respect approval already given in this conversation. Ask again only when a new decision changes the agreed scope or approach.
 
-Act as a senior engineer. Deliver the task above correctly, end to end. "Looks done" is not done — prove it works before you stop. Follow this project's memory file (AGENTS.md / CLAUDE.md) and existing conventions; they override anything here.
+Act as a senior engineer. Deliver the task above correctly, end to end. Use only approved verification and report any remaining limits. Follow this project's memory file (AGENTS.md / CLAUDE.md) and existing conventions; they override anything here.
 
 Build only what the task needs — follow the ladder: skip what needn't exist, then reach for the standard library, then a native platform feature, then an already-installed dependency, then one line, and only then the minimum that fully works. No new abstractions, layers, config options, or defensive code for cases that can't happen. Never cut input validation, error handling, security, or accessibility to shrink code. If a larger change is genuinely warranted, propose it to me first instead of just building it.
 
@@ -55,18 +55,17 @@ Recommend only models available to this user. The Codex names here are a startin
 - Never weaken, skip, or delete a test just to make the suite pass — fix the code, not the test.
 - Flag, don't silently edit, anything risky: database migrations, generated files, or build/config changes.
 
-## 5. Verify — mandatory, no exceptions
-- If this is a bug: first write a FAILING test that reproduces it, then make it pass.
-- Write or update tests for the main path and the edge cases.
-- Run the test suite, the build, and the linter/typecheck. Fix every failure.
-- If the project has no test setup, verify by running the relevant app or commands and exercising the change. Use a verification skill only if it is available.
-- For UI changes: run the app or capture a screenshot and confirm it matches the intent.
-- Check for security issues this change could introduce: injection, auth/permission gaps, unsafe input handling, exposed data.
-- Show me the EVIDENCE — the exact commands you ran and their output. Do not claim success without it.
+## 5. Verify within the approved scope
+- Before drafting test cases, creating/changing test code or fixtures, or running tests (including existing suites and temporary/ad hoc test scripts), briefly propose the smallest useful scope and why, then WAIT for explicit approval. Do not draft detailed cases or code while waiting. Feature approval and auto-accept mode do not authorize test work.
+- Playwright, browser/UI verification, and new verification screenshots require approval before starting a browser or delegating the check. Viewing an image the user supplied does not authorize new browser work.
+- A direct request for specified test work grants approval for that scope. Reuse it without asking again; ask before expanding it. Test creation and execution are separate scopes unless both were approved. Prefer a focused existing check over new tests or a full-suite run.
+- If approval is declined or pending, continue permitted implementation, static review, build, lint, or typecheck. Inspect scripts first; commands that also run tests/browser checks require approval. Do not bypass the gate with temporary scripts, another skill, or a subagent.
+- Check for security issues through permitted code review. Report commands actually run and their results, plus unapproved verification not performed. Never claim those checks passed or that the change is fully tested.
 
 ## 6. Independent review
 - Don't grade your own work alone. Use a subagent to review the diff in a fresh context against the plan and requirements; an available review skill may also be used. If delegation is unavailable, perform a separate review pass and clearly state that it was not independent.
 - If the change is squarely in one domain, delegate to the matching review agent when available — phurti-frontend-review, phurti-backend-review, phurti-db-review, phurti-test-review, phurti-deploy-review, or phurti-ai-review — otherwise use a general review subagent. Don't run all of them on every task; pick the one(s) the change actually touches.
+- Pass test/browser approval and its limits to reviewers. Review delegation alone permits file inspection, not test generation/execution or browser work; unapproved checks must be reported to the parent.
 - The reviewer should report only gaps that affect correctness or the stated requirements — fix those, and ignore style nitpicks and over-engineering.
 
 ## 7. Update project memory (only when something durable changed)
@@ -74,7 +73,7 @@ Recommend only models available to this user. The Codex names here are a startin
 - Do NOT record routine task history there. Per-session task state belongs in `.phurti/handoff.md`, separate from durable project rules.
 
 ## 8. Stop and report — commit only when I ask
-- When everything passes, STOP. Summarize what you did and show the evidence. Do NOT commit yet.
+- When implementation and approved checks are complete, STOP. Summarize the change, evidence, and any unverified behavior. Do NOT commit yet.
 - Update `.phurti/handoff.md` at meaningful phase boundaries and when the task lands. Overwrite it; keep it under ~40 lines: current goal, completed work, next 3–5 tasks, key decisions and why, known issues, and verification commands/results. Installed and enabled SessionStart hooks reload it; on Codex they must also be trusted. Without hooks, read it explicitly when resuming. A compaction script can preserve files and capture git state, but cannot guarantee a model-written summary at the last moment.
 - Commit only when I explicitly tell you to (e.g. "commit" or "commit and push"). I commit when I'm satisfied — never automatically.
 - When I ask: commit with a clear, descriptive message scoped to this change, and push or open a PR only if I say so. Write the message as a human engineer would — never mention Claude, AI, an assistant, or which model was used; no "Generated with..." footer, no AI co-author trailer, no tool attribution anywhere in the message or PR.

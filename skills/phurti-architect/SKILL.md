@@ -47,6 +47,7 @@ Recommend only models available to this user. The Codex names here are a startin
 ## 5. Phase it into a build plan
 - Break the design into an ordered, dependency-aware sequence of tasks, each small enough to be independently buildable, verifiable, and committable: shared foundations (types, schema, helpers) first, then the pieces that consume them, with the riskiest/widest-reaching work later. Flag tasks that touch the highest-risk areas.
 - Each task: what it delivers and what "done" looks like, written so a fresh session with zero context can pick it up.
+- Test creation/execution and Playwright/browser verification require separate explicit approval. Propose only the smallest useful scope; do not draft cases, run tests, or start browser work while waiting. Architecture or implementation-plan approval alone does not authorize them. Carry approved scope and limits into handoffs and subagent instructions.
 
 ## 6. Write the architecture doc and hand off
 - Present the design to me and WAIT for approval before writing anything. If I want changes, revise — don't proceed on an unapproved design, even in auto / auto-accept mode.
@@ -119,7 +120,7 @@ New — to create (follows the existing feature pattern):
 
 <tasks>
 - [ ] 1. Add invoice + invoiceTemplate models — files: shared/src/models/{invoice,invoiceTemplate}.js — done when: schemas defined and exported → /phurti-feature
-- [ ] 2. invoiceGeneratorService — files: apps/api/src/features/invoices/services/invoiceGeneratorService.js — done when: a billingSnapshot produces a PDF in S3, unit-tested → /phurti-feature
+- [ ] 2. invoiceGeneratorService — files: apps/api/src/features/invoices/services/invoiceGeneratorService.js — done when: a billingSnapshot produces a PDF in S3; test work requires separate approval → /phurti-feature
 - [ ] 3. Wire generateInvoice() into approveVerification() — done when: approving a manual payment creates the invoice atomically → /phurti-feature
 </tasks>
 ~~~

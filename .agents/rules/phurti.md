@@ -1,3 +1,6 @@
+---
+trigger: always_on
+---
 # Phurti rules — apply to all code in this project
 
 <!-- >>> phurti rules >>> -->

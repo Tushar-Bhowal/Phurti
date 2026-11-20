@@ -1,6 +1,6 @@
 # Phurti
 
-A portable senior-engineer workflow for Claude Code and Codex. Plan, implement, verify, review, and resume work with the same five skills. *Phurti* (फुर्ती) means agility: build only what the task needs, with evidence that it works.
+A portable senior-engineer workflow for Claude Code, Codex, and Antigravity. Plan, implement, verify, review, and resume work with the same five skills. *Phurti* (फुर्ती) means agility: build only what the task needs, with evidence that it works.
 
 ## What is included
 
@@ -21,9 +21,10 @@ Six domain reviewers cover frontend, backend, database, tests, deployment, and A
 | Claude Code | `~/.claude/CLAUDE.md` | `/phurti-*` | Native Markdown agents | Claude tool and lifecycle inputs |
 | Current local Codex CLI / IDE | `$CODEX_HOME/AGENTS.md` | `$phurti-*` | Native TOML agents | Codex tool and lifecycle inputs; trust required |
 | Codex desktop local mode | Same local configuration | Select a skill | Uses local Codex agents | Review hooks in the app; verify your client |
-| Copilot / Antigravity | Generated rule adapters | Not installed | Not installed | Not installed |
+| Antigravity | `~/.gemini/config/AGENTS.md` & `.agents/rules/phurti.md` | `/phurti-*` in `~/.gemini/config/skills` | Native Markdown subagents in `~/.gemini/config/agents` | `hooks.json` lifecycle inputs (`run_command`, `edit_file`, `SessionStart`) |
+| Copilot | Generated rule adapter | Not installed | Not installed | Not installed |
 
-Codex home defaults to `~/.codex`; skills go in `~/.agents/skills`. Native custom agents and lifecycle hooks require a current Codex client. This implementation targets the documented formats and was checked with Codex CLI `0.164.0-alpha.11.1`; older versions may differ. Cloud orchestration has different hook support and is not covered by this local installer.
+Codex home defaults to `~/.codex`; skills go in `~/.agents/skills`. Antigravity config defaults to `~/.gemini/config` (or `$GEMINI_CONFIG_DIR`). Native custom agents and lifecycle hooks require a current client. This implementation targets the documented formats and was checked with Codex CLI `0.164.0-alpha.11.1` and Antigravity 2.0. Cloud orchestration has different hook support and is not covered by this local installer.
 
 See the official [skills](https://learn.chatgpt.com/docs/build-skills), [subagents](https://learn.chatgpt.com/docs/agent-configuration/subagents), and [hooks](https://learn.chatgpt.com/docs/hooks) documentation. A successful file installation does not prove that a particular client has enabled or trusted the hooks.
 
@@ -34,14 +35,15 @@ Requirements: Python 3.9+, git, and the host you intend to use. Development test
 ```sh
 git clone https://github.com/Tushar-Bhowal/Phurti.git phurti
 cd phurti
-bash install.sh                  # both Claude Code and Codex
-bash install.sh --agent codex    # Codex only
-bash install.sh --agent claude   # Claude Code only
+bash install.sh                     # Claude Code, Codex, and Antigravity
+bash install.sh --agent antigravity # Antigravity only
+bash install.sh --agent codex       # Codex only
+bash install.sh --agent claude      # Claude Code only
 ```
 
 The installer preserves unrelated settings, hooks, and instructions. It replaces the marked Phurti rule block on updates and refreshes Phurti skill, reviewer, and hook files. Changed files get a sibling `.phurti-backup` containing their previous version. Invalid JSON or malformed rule markers stop installation before writing configuration; disk errors during writing can still leave a partial install, which can be rerun.
 
-`CODEX_HOME`, when set, controls the Codex rules, agents, and hooks destination. It does not move user skills from `~/.agents/skills`. `--home /tmp/phurti-check` stages an installation under that directory, ignoring `CODEX_HOME` and leaving your actual user configuration alone.
+`CODEX_HOME` and `GEMINI_CONFIG_DIR`, when set, control the respective Codex and Antigravity configuration destinations. User skills for Codex default to `~/.agents/skills`, while Antigravity skills default to `~/.gemini/config/skills`. `--home /tmp/phurti-check` stages an installation under that directory, ignoring environment overrides and leaving your actual user configuration alone.
 
 Codex hooks are merged into `hooks.json`; `config.toml`, model choices, permission settings, and existing inline hooks are preserved. If you previously configured Phurti hooks manually in TOML or another active layer, remove those duplicates yourself: Codex runs hooks from all active sources.
 
@@ -60,6 +62,8 @@ In the IDE, use the skill selector or `$` mention and the model picker. If hook 
 
 For Claude Code, check `/phurti-feature`, `/agents`, and `/hooks` after reloading.
 
+For Antigravity, reload the environment, inspect `/skills` for all five `phurti-*` skills, confirm subagents in `/agents`, and verify the registered hooks in `hooks.json`.
+
 ## Use
 
 Codex CLI / IDE examples:
@@ -74,32 +78,32 @@ $phurti-audit src/auth
 $phurti-memory refine this project's instructions
 ```
 
-On Claude Code, replace `$phurti-` with `/phurti-`. A bare feature invocation asks for the task; audit defaults to the current diff. The feature workflow respects plans already approved in the conversation. Reviewers are selected by the actual domain; all six do not run by default.
+On Claude Code and Antigravity, replace `$phurti-` with `/phurti-`. A bare feature invocation asks for the task; audit defaults to the current diff. The feature workflow respects plans already approved in the conversation. Reviewers are selected by the actual domain; all six do not run by default.
 
 ## Test and browser approval
 
-For both Claude Code and Codex, the rules require explicit approval before drafting test cases, creating or changing test code/fixtures, or running any tests. This includes existing suites, temporary/ad hoc test scripts, Playwright/browser verification, and new verification screenshots. The agent proposes the smallest useful scope and waits for your answer before starting that work.
+For Claude Code, Codex, and Antigravity, the rules require explicit approval before drafting test cases, creating or changing test code/fixtures, or running any tests. This includes existing suites, temporary/ad hoc test scripts, Playwright/browser verification, and new verification screenshots. The agent proposes the smallest useful scope and waits for your answer before starting that work.
 
 Approving a feature, bug fix, architecture, or review does not automatically approve testing. A direct request for specified test work is approval for that scope; approval to create tests alone does not authorize running them, or vice versa. The agent reuses approval within its scope and asks again before expanding it. Reviewers and other skills inherit the same limits; combined commands cannot bypass them.
 
 If you decline or have not answered, the agent continues permitted implementation and static review/build/lint/typecheck, then reports what remains unverified. It must inspect command scripts before running them because a build or lint command may also launch tests. It must not claim unrun checks passed. This is a rule/workflow policy; the existing test-protection hook checks weakening, not whether you granted testing approval.
 
-To apply these rules to an existing installation, run `bash update.sh` for both agents (or use `--agent codex` / `--agent claude`), then reload the client. Review changed Codex hooks if prompted.
+To apply these rules to an existing installation, run `bash update.sh` (or specify `--agent`), then reload the client. Review changed hooks if prompted.
 
 ## Model recommendations
 
 Phurti suggests a model, reasoning effort, and a brief reason. It continues on the model you select and does not change your session or write model defaults into configuration.
 
-| Work | Claude Code | Codex starting recommendation |
-| --- | --- | --- |
-| Clear small edits / straightforward fixes | Haiku | GPT-6 Luna |
-| Features / localized debugging / focused review | Sonnet | GPT-6.1 Sol |
-| Difficult architecture / cross-system diagnosis | Opus | GPT-6 Astra |
-| Writing / visual understanding / computer use | Choose for the task | Consider GPT-6.1 Terra where available |
+| Work | Claude Code | Codex starting recommendation | Antigravity recommendation |
+| --- | --- | --- | --- |
+| Clear small edits / straightforward fixes | Haiku | GPT-6 Luna | Gemini 3.8 Flash |
+| Features / localized debugging / focused review | Sonnet | GPT-6.1 Sol | Gemini 3.8 Pro |
+| Difficult architecture / cross-system diagnosis | Opus | GPT-6 Astra | Gemini 3.8 Pro (High thinking) |
+| Writing / visual understanding / computer use | Choose for the task | Consider GPT-6.1 Terra where available | Gemini 3.8 Pro |
 
 These are workload recommendations, not claims of equivalent model capability. The Codex policy was checked against [official model guidance](https://learn.chatgpt.com/docs/models) on 2026-11-08. Availability varies by client, account, and workspace. The skills use known available models and check current guidance when uncertain. Start with the supported default effort (Luna High, Astra Light/`low`, Sol's client default), then increase it for harder work. Codex CLI uses `/model`; IDE and desktop clients expose a model picker.
 
-Claude reviewers retain their existing `model: sonnet`. Generated Codex reviewers inherit the parent/default subagent model and effort, so installation does not pin a model unavailable to your account. Codex can honor an explicit supported subagent model choice; inheritance does not guarantee a cheaper review.
+Claude reviewers retain their existing `model: sonnet`. Generated Codex and Antigravity reviewers inherit the parent/default subagent model and effort, so installation does not pin a model unavailable to your account. Codex and Antigravity can honor an explicit supported subagent model choice; inheritance does not guarantee a cheaper review.
 
 ## Plans and continuity
 

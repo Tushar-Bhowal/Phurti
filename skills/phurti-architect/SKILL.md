@@ -9,8 +9,8 @@ allowed-tools: Read, Grep, Glob, Bash, Write
 
 ## Host conventions
 - Use the task in the invoking message and conversation. On Claude Code, supplied skill arguments are also task input; never treat an unexpanded placeholder as a task.
-- Invoke skills as `/phurti-name` in Claude Code and `$phurti-name` in Codex CLI/IDE (or select the skill in the app). Adapt the command examples below to the active host.
-- Follow `AGENTS.md` on Codex and `CLAUDE.md` on Claude Code, including applicable nested rules. Use the host's available question tool, or ask in chat if it is unavailable in the current mode.
+- Invoke skills as `/phurti-name` in Claude Code and Antigravity, and `$phurti-name` in Codex CLI/IDE (or select the skill in the app). Adapt the command examples below to the active host.
+- Follow `AGENTS.md` on Codex and Antigravity, and `CLAUDE.md` on Claude Code, including applicable nested rules. Use the host's available question tool, or ask in chat if it is unavailable in the current mode.
 - At the repository root, keep new plans in `.phurti/plans/` and task handoffs in `.phurti/handoff.md`. Read an explicitly supplied legacy `.claude/plans/` file in place; accept legacy `/phurti-*` task tags. At startup, read the shared handoff if present, otherwise `.claude/handoff.md`, and verify it against the current request. When creating scratch state, use a local Git exclusion for `.phurti/` if it is not already ignored; this local exclusion is the only permitted write outside the output file.
 - Respect approval already given in this conversation. Ask again only when a new decision changes the agreed scope or approach.
 
@@ -21,7 +21,7 @@ This is design, not gold-plating. Architect only what the thing needs — apply 
 ## 0. Set scope and model
 - If no task was supplied, ask what I want to architect — a whole app, a feature, or a system change — and the goal in plain words. Restate it as a clear problem statement and confirm before designing.
 - State whether this is **whole-app** (greenfield or a major subsystem) or **feature-level** (a feature inside an existing app) — the depth differs. If it turns out to be a small, single-approach change, say so and point me to `/phurti-feature` instead of over-architecting it.
-- Recommend a model proportionate to the design: Claude Code uses Opus for substantial architecture. Codex uses GPT-6 Astra for difficult architectural trade-offs, or GPT-6.1 Sol for a well-bounded feature design.
+- Recommend a model proportionate to the design: Claude Code uses Opus for substantial architecture. Codex uses GPT-6 Astra for difficult architectural trade-offs, or GPT-6.1 Sol for a well-bounded feature design. Antigravity uses Gemini 3.8 Pro with High reasoning effort for substantial architecture, or Gemini 3.8 Pro for a well-bounded feature design.
 
 Recommend only models available to this user. The Codex names here are a starting policy verified on 2026-11-08, not permanent aliases: consult the host's model list or [current official model guidance](https://learn.chatgpt.com/docs/models) when availability or names are uncertain; never claim you inspected a model list you cannot access. If account availability cannot be checked, label the recommendation conditional and continue on the current model. Start at the supported default effort (Luna High, Astra Light/`low`, Sol's client default), then suggest higher effort for difficult reasoning. Include the model, effort, and one sentence explaining the choice. Codex CLI uses `/model`; IDE/app users use the model picker. Claude Code uses `/model`. Recommend without changing the main session or blocking work on a switch; proceed with the user's chosen model.
 

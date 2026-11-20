@@ -24,7 +24,10 @@ def git(cwd, *args):
 
 
 def project_root(data):
-    cwd = data.get("cwd") or os.getcwd()
+    cwd = data.get("cwd")
+    if not cwd and isinstance(data.get("workspacePaths"), list) and data["workspacePaths"]:
+        cwd = data["workspacePaths"][0]
+    cwd = cwd or os.getcwd()
     root = git(cwd, "rev-parse", "--show-toplevel")
     return Path(root) if root else None
 

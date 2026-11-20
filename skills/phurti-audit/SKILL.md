@@ -9,8 +9,8 @@ allowed-tools: Read, Grep, Glob, Bash, Write
 
 ## Host conventions
 - Use the task in the invoking message and conversation. On Claude Code, supplied skill arguments are also task input; never treat an unexpanded placeholder as a task.
-- Invoke skills as `/phurti-name` in Claude Code and `$phurti-name` in Codex CLI/IDE (or select the skill in the app). Adapt the command examples below to the active host.
-- Follow `AGENTS.md` on Codex and `CLAUDE.md` on Claude Code, including applicable nested rules. Use the host's available question tool, or ask in chat if it is unavailable in the current mode.
+- Invoke skills as `/phurti-name` in Claude Code and Antigravity, and `$phurti-name` in Codex CLI/IDE (or select the skill in the app). Adapt the command examples below to the active host.
+- Follow `AGENTS.md` on Codex and Antigravity, and `CLAUDE.md` on Claude Code, including applicable nested rules. Use the host's available question tool, or ask in chat if it is unavailable in the current mode.
 - At the repository root, keep new plans in `.phurti/plans/` and task handoffs in `.phurti/handoff.md`. Read an explicitly supplied legacy `.claude/plans/` file in place; accept legacy `/phurti-*` task tags. At startup, read the shared handoff if present, otherwise `.claude/handoff.md`, and verify it against the current request. When creating scratch state, use a local Git exclusion for `.phurti/` if it is not already ignored; this local exclusion is the only permitted write outside the output file.
 - Respect approval already given in this conversation. Ask again only when a new decision changes the agreed scope or approach.
 
@@ -19,7 +19,7 @@ Review the scope below and return one honest, prioritized report. This is **read
 ## 1. Set scope (state it before you start)
 - A path/file/area in the invoking message → audit that. `repo`/`full` → the whole codebase. Empty or `diff` → the current uncommitted changes (`git status`, `git diff`, `git diff --staged`). Default is the diff — "review what I just did."
 - Include relevant untracked source files reported by git status. If diff scope contains no staged, unstaged, or relevant untracked changes, report that there is nothing to audit and stop without running checks or writing files.
-- Recommend Sonnet on Claude Code or GPT-6.1 Sol on Codex for a focused audit. Reserve Opus / GPT-6 Astra for difficult whole-repo or architectural synthesis. Reviewers may inherit the current Codex model; do not assume they run on a cheaper model.
+- Recommend Sonnet on Claude Code, GPT-6.1 Sol on Codex, or Gemini 3.8 Pro on Antigravity for a focused audit. Reserve Opus / GPT-6 Astra / Gemini 3.8 Pro (High thinking) for difficult whole-repo or architectural synthesis. Reviewers may inherit the current Codex or Antigravity model; do not assume they run on a cheaper model.
 
 Recommend only models available to this user. The Codex names here are a starting policy verified on 2026-11-08, not permanent aliases: consult the host's model list or [current official model guidance](https://learn.chatgpt.com/docs/models) when availability or names are uncertain; never claim you inspected a model list you cannot access. If account availability cannot be checked, label the recommendation conditional and continue on the current model. Start at the supported default effort (Luna High, Astra Light/`low`, Sol's client default), then suggest higher effort for difficult reasoning. Include the model, effort, and one sentence explaining the choice. Codex CLI uses `/model`; IDE/app users use the model picker. Claude Code uses `/model`. Recommend without changing the main session or blocking work on a switch; proceed with the user's chosen model.
 

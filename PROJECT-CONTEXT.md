@@ -1,42 +1,43 @@
 # Phurti project context
 
-Phurti is a portable rules and workflow kit for Claude Code and local Codex. Read [README.md](README.md) for installation, commands, model policy, coverage, and activation instructions. Read [AGENTS.md](AGENTS.md) for the always-on rules.
+Phurti is a portable rules and workflow kit for Claude Code, Codex, and Antigravity. Read [README.md](README.md) for installation, commands, model policy, coverage, and activation instructions. Read [AGENTS.md](AGENTS.md) for the always-on rules.
 
 ## Sources and adapters
 
 - `AGENTS.md` contains the canonical marked rules block. Install/update replaces only that block in host instructions and preserves personal content around it.
 - `skills/phurti-*/SKILL.md` contains five shared workflows: architect, feature, fix, audit, memory. Each reads the user's invoking message, follows host conventions, recommends an available model, and respects prior approval.
-- `agents/*.md` contains the six canonical domain reviewers, including Claude frontmatter. Generate Codex `name`, `description`, and `developer_instructions` TOML with `bash scripts/build-adapters.sh`.
-- `adapters/codex/agents/*.toml`, `.github/copilot-instructions.md`, and `.agents/rules/phurti.md` are generated. Never edit them directly. Check drift with `bash scripts/build-adapters.sh --check`.
+- `agents/*.md` contains the six canonical domain reviewers, including Claude frontmatter. Generate Codex TOML and Antigravity Markdown subagents with `bash scripts/build-adapters.sh`.
+- `adapters/codex/agents/*.toml`, `adapters/antigravity/agents/*.md`, `.github/copilot-instructions.md`, and `.agents/rules/phurti.md` are generated. Never edit them directly. Check drift with `bash scripts/build-adapters.sh --check`.
 - `skills/phurti-memory/agents/openai.yaml` preserves explicit-only invocation on Codex, corresponding to its Claude `disable-model-invocation` field. Other skills remain available for implicit selection.
 
 ## Installation
 
 `install.sh` and `update.sh` call the standard-library Python installer in `scripts/install.py`. Python 3.9+ is sufficient for installation and hooks. Use Python 3.11+ for development tests (`tomllib`). No package installation is required.
 
-- Default: install both agents. `--agent claude` and `--agent codex` select one host.
+- Default: install for all supported agents (`--agent all`). Single-host flags: `--agent claude`, `--agent codex`, and `--agent antigravity`.
 - Claude: `~/.claude/{CLAUDE.md,settings.json,skills,agents,hooks}`.
 - Codex: `${CODEX_HOME:-~/.codex}/{AGENTS.md,hooks.json,agents,hooks}`; skills always use `~/.agents/skills`.
-- `--home PATH` stages both layouts under PATH and ignores `CODEX_HOME`, without changing environment variables or the real user's settings.
+- Antigravity: `${GEMINI_CONFIG_DIR:-~/.gemini/config}/{AGENTS.md,hooks.json,skills,agents,hooks}`.
+- `--home PATH` stages layouts under PATH and ignores environment overrides, without changing environment variables or the real user's settings.
 - Read and validate the selected hosts' existing rule blocks and JSON before writing. Never replace malformed configuration with an empty object.
 - Preserve unrelated hooks and settings. Refresh owned handlers, avoid duplication on rerun, and back up changed files to sibling `.phurti-backup` files. Writes are atomic per file, not transactional across the installation.
 - Codex `config.toml` is untouched. Manually duplicated inline Phurti hooks must be reconciled by the user because all active hook layers run.
 
 ## Host differences
 
-Use `/phurti-*` on Claude Code and `$phurti-*` or the skill selector on Codex. Avoid assuming Claude-only argument substitution, tools, memory, or commands exist on Codex. A missing question tool means ask in chat. A missing reviewer means disclose a non-independent review pass; never claim delegation happened.
+Use `/phurti-*` on Claude Code and Antigravity, and `$phurti-*` or the skill selector on Codex. Avoid assuming Claude-only argument substitution, tools, memory, or commands exist on other hosts. A missing question tool means ask in chat. A missing reviewer means disclose a non-independent review pass; never claim delegation happened.
 
-Model names are recommendations, checked against host availability and current official guidance when uncertain. Skills do not switch the root session. Claude reviewer files retain Sonnet; generated Codex reviewers inherit the parent/default subagent model and effort. Custom agent instructions do not create a separate read-only sandbox.
+Model names are recommendations, checked against host availability and current official guidance when uncertain. Skills do not switch the root session. Claude reviewer files retain Sonnet; generated Codex and Antigravity reviewers inherit the parent/default subagent model and effort. Custom agent instructions do not create a separate read-only sandbox.
 
-The local Codex implementation targets the current official skill, custom-agent, and hook formats, with CLI `0.164.0-alpha.11.1` used during development. Do not infer compatibility with older releases or cloud orchestration. Verify GUI behavior in the actual client before making a stronger claim.
+The implementation targets the current official skill, custom-agent, and hook formats for Claude Code, Codex, and Antigravity. Verify GUI behavior in the actual client before making a stronger claim.
 
 ## Hooks and continuity
 
-- `block-ai-attribution.py`: heuristic command/message-file inspection of `git commit`. Exit 2 blocks a matched attribution signature. Arbitrary shell evaluation and all commit entry points are not covered.
-- `protect-tests.py`: Claude Edit/MultiEdit/Write and Codex apply_patch. Compare assertions and skip markers per affected test. Detect Codex test deletion and moves outside recognized test paths. Shell-based file writes and semantic weakening remain outside its coverage.
-- `session-status.py`: inject bounded git status and a handoff from the git root using the event's cwd. Shared handoff wins; legacy Claude handoff is fallback.
+- `block-ai-attribution.py`: heuristic command/message-file inspection of `git commit` across `Bash` (Claude/Codex) and `run_command` (Antigravity). On Claude/Codex, exit 2 blocks matched attribution; on Antigravity, emits `{"decision": "deny", "reason": ...}` JSON. Arbitrary shell evaluation and all commit entry points are not covered.
+- `protect-tests.py`: Claude Edit/MultiEdit/Write, Codex apply_patch, and Antigravity edit_file/write_file. Compare assertions and skip markers per affected test. Detect test deletion and moves outside recognized test paths. Shell-based file writes and semantic weakening remain outside its coverage.
+- `session-status.py`: inject bounded git status and a handoff from the git root using the event's cwd / workspacePaths. Shared handoff wins; legacy Claude handoff is fallback. On Antigravity emits `injectSteps` JSON.
 - `pre-compact.py`: preserve the handoff; create git-only breadcrumbs if none exists. On Codex emit JSON because plain text is ignored for this event. It cannot request a guaranteed model turn before compaction.
-- `session_context.py`: common event input, git-root, status, and handoff lookup helpers. It is a helper, not a fifth registered hook.
+- `session_context.py`: common event input, git-root, status, and handoff lookup helpers across hosts. It is a helper, not a registered hook.
 
 New plans and handoffs use `.phurti/plans/` and `.phurti/handoff.md`. Ignore `.phurti/` in task repositories. Read supplied legacy `.claude/plans/` files in place. Refresh a narrative handoff during feature/fix phase boundaries and completion; overwrite it and keep it under about 40 lines. A handoff is scratch task state, not a growing memory log.
 

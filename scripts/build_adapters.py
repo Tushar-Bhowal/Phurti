@@ -28,15 +28,36 @@ def agent_toml(path):
     return "".join(f"{key} = {json.dumps(value, ensure_ascii=False)}\n" for key, value in values.items())
 
 
+def agent_antigravity(path):
+    _, frontmatter, body = path.read_text(encoding="utf-8").split("---", 2)
+    fields = dict(line.split(":", 1) for line in frontmatter.strip().splitlines())
+    values = {
+        "name": fields["name"].strip(),
+        "description": fields["description"].strip(),
+    }
+    return (
+        f"---\n"
+        f"name: {values['name']}\n"
+        f"description: {values['description']}\n"
+        f"subagent: true\n"
+        f"mainAgent: false\n"
+        f"tools: [read_file, run_command, manage_task]\n"
+        f"---\n"
+        f"{body.strip()}\n"
+    )
+
+
 def rendered_adapters(root=ROOT):
     rules = "# Phurti rules — apply to all code in this project\n\n"
     rules += rule_block((root / "AGENTS.md").read_text(encoding="utf-8")) + "\n"
+    antigravity_rules = "---\ntrigger: always_on\n---\n" + rules
     files = {
         root / ".github/copilot-instructions.md": rules,
-        root / ".agents/rules/phurti.md": rules,
+        root / ".agents/rules/phurti.md": antigravity_rules,
     }
     for source in sorted((root / "agents").glob("phurti-*.md")):
         files[root / "adapters/codex/agents" / (source.stem + ".toml")] = agent_toml(source)
+        files[root / "adapters/antigravity/agents" / source.name] = agent_antigravity(source)
     return files
 
 
@@ -55,7 +76,7 @@ def main():
                 path.write_text(content, encoding="utf-8")
     if drift:
         parser.exit(1, "Adapter drift: " + ", ".join(drift) + "\nRun bash scripts/build-adapters.sh\n")
-    print("Adapters in sync." if args.check else "Rebuilt rules and Codex review agents.")
+    print("Adapters in sync." if args.check else "Rebuilt rules, Codex review agents, and Antigravity review agents.")
 
 
 if __name__ == "__main__":

@@ -10,18 +10,33 @@ try:
 except Exception:
     sys.exit(0)  # can't parse -> never block on uncertainty
 
-if not isinstance(data, dict) or data.get("tool_name") != "Bash":
+if not isinstance(data, dict):
     sys.exit(0)
 
-tool_input = data.get("tool_input", {}) or {}
-if not isinstance(tool_input, dict):
+is_antigravity = "--host" in sys.argv and "antigravity" in sys.argv
+if "toolCall" in data or "workspacePaths" in data:
+    is_antigravity = True
+
+tool_call = data.get("toolCall") if isinstance(data.get("toolCall"), dict) else {}
+tool_name = data.get("tool_name") or tool_call.get("name", "")
+
+if tool_name not in ("Bash", "run_command"):
+    if is_antigravity:
+        print(json.dumps({"decision": "allow"}))
     sys.exit(0)
-cmd = tool_input.get("command", "") or ""
+
+tool_input = data.get("tool_input") if isinstance(data.get("tool_input"), dict) else {}
+tool_call_args = tool_call.get("args") if isinstance(tool_call.get("args"), dict) else {}
+cmd = tool_input.get("command") or tool_call_args.get("CommandLine") or ""
 if not isinstance(cmd, str):
+    if is_antigravity:
+        print(json.dumps({"decision": "allow"}))
     sys.exit(0)
 
 # Only inspect git commit commands.
 if not re.search(r"\bgit\b.*\bcommit\b", cmd, re.IGNORECASE | re.DOTALL):
+    if is_antigravity:
+        print(json.dumps({"decision": "allow"}))
     sys.exit(0)
 
 PATTERNS = [
@@ -78,12 +93,18 @@ while index < len(tokens):
 
 for pat in PATTERNS:
     if re.search(pat, text, re.IGNORECASE):
-        sys.stderr.write(
+        msg = (
             "Blocked: the commit message contains AI/model attribution "
             f"(matched: '{pat}'). Rewrite it as a human engineer would — no "
             "tool attribution or co-author trailer; no 'Generated "
-            "with' footer; no Co-Authored-By trailer. Then commit again.\n"
+            "with' footer; no Co-Authored-By trailer. Then commit again."
         )
+        if is_antigravity:
+            print(json.dumps({"decision": "deny", "reason": msg}))
+            sys.exit(0)
+        sys.stderr.write(msg + "\n")
         sys.exit(2)
 
+if is_antigravity:
+    print(json.dumps({"decision": "allow"}))
 sys.exit(0)

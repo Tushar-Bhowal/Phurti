@@ -29,10 +29,11 @@ class InstallTests(unittest.TestCase):
 
     def test_clean_install_and_repeat(self):
         self.install()
-        for directory in (self.home / '.claude/skills', self.home / '.agents/skills'):
+        for directory in (self.home / '.claude/skills', self.home / '.agents/skills', self.home / '.gemini/config/skills'):
             self.assertEqual(len(list(directory.glob('*/SKILL.md'))), 5)
             self.assertTrue((directory / 'phurti-memory/agents/openai.yaml').is_file())
         self.assertEqual(len(list((self.codex / 'agents').glob('*.toml'))), 6)
+        self.assertEqual(len(list((self.home / '.gemini/config/agents').glob('*.md'))), 6)
         before = {p: p.read_bytes() for p in self.home.rglob('*') if p.is_file()}
         self.install()
         after = {p: p.read_bytes() for p in self.home.rglob('*') if p.is_file()}
@@ -45,6 +46,8 @@ class InstallTests(unittest.TestCase):
                 for handler in group['hooks']:
                     result = subprocess.run(shlex.split(handler['command']), input='{}', text=True, capture_output=True, cwd=self.home)
                     self.assertEqual(result.returncode, 0, result.stderr)
+        agy_settings = json.loads((self.home / '.gemini/config/hooks.json').read_text())
+        self.assertEqual(len(agy_settings), 3)
 
     def test_rules_refresh_without_changing_personal_content(self):
         self.codex.mkdir()
@@ -81,9 +84,32 @@ class InstallTests(unittest.TestCase):
         (self.codex / 'config.toml').write_text(config)
         self.install('codex')
         self.assertFalse((self.home / '.claude').exists())
+        self.assertFalse((self.home / '.gemini').exists())
         self.assertEqual((self.codex / 'config.toml').read_text(), config)
         settings = json.loads((self.codex / 'hooks.json').read_text())
         self.assertNotIn('permissions', settings)
+
+    def test_antigravity_only_leaves_claude_and_codex_untouched(self):
+        self.install('antigravity')
+        self.assertFalse((self.home / '.claude').exists())
+        self.assertFalse(self.codex.exists())
+        agy = self.home / '.gemini/config'
+        self.assertTrue((agy / 'AGENTS.md').exists())
+        self.assertTrue((agy / 'hooks.json').exists())
+        self.assertEqual(len(list((agy / 'skills').glob('*/SKILL.md'))), 5)
+        self.assertEqual(len(list((agy / 'agents').glob('*.md'))), 6)
+
+    def test_antigravity_custom_hook_is_preserved(self):
+        agy = self.home / '.gemini/config'
+        agy.mkdir(parents=True)
+        handler = {'type': 'command', 'command': 'python3 /personal/custom-checker.py'}
+        source = {'personal-check': {'PreToolUse': [{'matcher': 'run_command', 'hooks': [handler]}]}}
+        (agy / 'hooks.json').write_text(json.dumps(source))
+        self.install('antigravity')
+        result = json.loads((agy / 'hooks.json').read_text())
+        self.assertIn('personal-check', result)
+        self.assertEqual(result['personal-check']['PreToolUse'][0]['hooks'], [handler])
+        self.assertIn('phurti-attribution', result)
 
     def test_custom_codex_home_keeps_skills_in_user_location(self):
         destination = self.home / 'custom-config'

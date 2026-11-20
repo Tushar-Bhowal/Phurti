@@ -12,14 +12,19 @@ except Exception:
 if not isinstance(data, dict):
     sys.exit(0)
 
-tool = data.get("tool_name", "")
-if tool not in ("Edit", "MultiEdit", "Write", "apply_patch"):
+is_antigravity = "--host" in sys.argv and "antigravity" in sys.argv
+if "toolCall" in data or "workspacePaths" in data:
+    is_antigravity = True
+
+tool_call = data.get("toolCall") if isinstance(data.get("toolCall"), dict) else {}
+tool = data.get("tool_name", "") or tool_call.get("name", "")
+if tool not in ("Edit", "MultiEdit", "Write", "apply_patch", "edit_file", "write_file"):
+    if is_antigravity:
+        print(json.dumps({"decision": "allow"}))
     sys.exit(0)
 
-ti = data.get("tool_input", {}) or {}
-if not isinstance(ti, dict):
-    sys.exit(0)
-path = ti.get("file_path", "") or ""
+ti = data.get("tool_input") if isinstance(data.get("tool_input"), dict) else (tool_call.get("args") if isinstance(tool_call.get("args"), dict) else {})
+path = ti.get("file_path", "") or ti.get("Path", "")
 
 
 def is_test_file(p):
@@ -58,7 +63,8 @@ def count(rx, s):
 def read_file(path):
     try:
         base = data.get("cwd") or os.getcwd()
-        with open(os.path.join(base, path), encoding="utf-8", errors="replace") as stream:
+        full_path = path if os.path.isabs(path) else os.path.join(base, path)
+        with open(full_path, encoding="utf-8", errors="replace") as stream:
             return stream.read()
     except OSError:
         return ""
@@ -91,6 +97,16 @@ def changes():
                     new.append(line[1:])
         if current is not None:
             yield current, "\n".join(old), "\n".join(new), removed
+    elif tool == "edit_file":
+        target_path = ti.get("Path", "")
+        if is_test_file(target_path):
+            yield target_path, ti.get("Target", ""), ti.get("Replacement", ""), False
+    elif tool == "write_file":
+        target_path = ti.get("Path", "")
+        if is_test_file(target_path):
+            old_content = read_file(target_path)
+            new_content = (old_content + ti.get("Content", "")) if ti.get("Append") else ti.get("Content", "")
+            yield target_path, old_content, new_content, False
     elif is_test_file(path):
         if tool == "Edit":
             yield path, ti.get("old_string", ""), ti.get("new_string", ""), False
@@ -114,11 +130,17 @@ for file_path, old, new, removed in changes():
     if count(SKIP_RE, new) > count(SKIP_RE, old):
         reasons.append("adds a skip/pending marker that disables a test")
     if reasons:
-        sys.stderr.write(
+        msg = (
             f"Blocked: {file_path} " + " and ".join(reasons) + ". "
             "Fix the code under test instead of weakening the suite. If the test "
-            "itself is wrong, explain why and ask before changing it.\n"
+            "itself is wrong, explain why and ask before changing it."
         )
+        if is_antigravity:
+            print(json.dumps({"decision": "deny", "reason": msg}))
+            sys.exit(0)
+        sys.stderr.write(msg + "\n")
         sys.exit(2)
 
+if is_antigravity:
+    print(json.dumps({"decision": "allow"}))
 sys.exit(0)
